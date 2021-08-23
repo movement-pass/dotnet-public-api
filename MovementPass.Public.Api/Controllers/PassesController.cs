@@ -68,7 +68,7 @@
                 .Send(new ViewPassRequest { Id = id }, cancellationToken)
                 .ConfigureAwait(false);
 
-            return pass == null ? this.NotFound() : this.Ok(pass);
+            return pass == null ? (ActionResult)this.NotFound() : this.Ok(pass);
         }
     }
 }

@@ -38,7 +38,7 @@ namespace MovementPass.Public.Api.Controllers
                 .ConfigureAwait(false);
 
             return result == null ?
-                this.ClientError("Invalid credential!") :
+                (ActionResult)this.ClientError("Invalid credential!") :
                 this.Ok(result);
         }
 
