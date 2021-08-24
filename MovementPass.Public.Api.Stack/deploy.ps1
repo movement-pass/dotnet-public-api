@@ -13,4 +13,4 @@ dotnet lambda package -o "$($app)_$($name)_$($version).zip"
 Set-Location -Path "../MovementPass.Public.Api.Stack"
 Move-Item "../MovementPass.Public.Api/$($app)_$($name)_$($version).zip" $location -Force
 
-cdk deploy "$($app)-$($name)-$($version)" --require-approval never --profile ${awsProfile}
+cdk deploy --require-approval never --profile ${awsProfile}
