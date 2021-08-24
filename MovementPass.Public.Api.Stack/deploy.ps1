@@ -1,4 +1,4 @@
-$profile = "movement-pass"
+$awsProfile = "movement-pass"
 $app = "movement-pass"
 $version = "v1"
 $name = "public-api"
@@ -13,4 +13,4 @@ dotnet lambda package -o "$($app)_$($name)_$($version).zip"
 Set-Location -Path "../MovementPass.Public.Api.Stack"
 Move-Item "../MovementPass.Public.Api/$($app)_$($name)_$($version).zip" $location -Force
 
-cdk deploy "$($app)-$($name)-$($version)" --require-approval never --profile ${profile}
+cdk deploy "$($app)-$($name)-$($version)" --require-approval never --profile ${awsProfile}

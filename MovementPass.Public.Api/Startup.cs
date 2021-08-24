@@ -161,7 +161,6 @@ namespace MovementPass.Public.Api
 
             services.AddMediatR(this.GetType().Assembly);
 
-
             this.Configuration.Apply<DynamoDBTablesOptions>(services);
             this.Configuration.Apply<PhotoBucketOptions>(services);
             this.Configuration.Apply<JwtOptions>(services);
