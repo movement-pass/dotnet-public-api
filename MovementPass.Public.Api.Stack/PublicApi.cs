@@ -33,7 +33,7 @@
                 new FunctionProps {
                     FunctionName = name,
                     Handler =
-                        "MovementPass.Public.Api:MovementPass.Public.Api.LambdaEntryPoint::FunctionHandlerAsync",
+                        "MovementPass.Public.Api::MovementPass.Public.Api.LambdaEntryPoint::FunctionHandlerAsync",
                     Runtime = Runtime.DOTNET_CORE_3_1,
                     Timeout = Duration.Seconds(30),
                     MemorySize = 3008,
