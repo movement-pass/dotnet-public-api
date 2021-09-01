@@ -9,6 +9,7 @@
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Mvc.ModelBinding;
+    using Microsoft.Net.Http.Headers;
 
     using MediatR;
 
@@ -45,6 +46,7 @@
         }
 
         [HttpGet("")]
+        [ResponseCache(Duration = 180, Location = ResponseCacheLocation.Client)]
         [ProducesResponseType(typeof(PassListResult), StatusCodes.Status200OK)]
         public async Task<ActionResult> List([FromQuery] PassListKey startKey,
             CancellationToken cancellationToken)
@@ -68,7 +70,27 @@
                 .Send(new ViewPassRequest { Id = id }, cancellationToken)
                 .ConfigureAwait(false);
 
-            return pass == null ? (ActionResult)this.NotFound() : this.Ok(pass);
+            if (pass == null)
+            {
+                return this.NotFound();
+            }
+
+            var headers = this.Response?.GetTypedHeaders();
+
+            if (headers != null)
+            {
+                headers.CacheControl =
+                    new CacheControlHeaderValue {
+                        Private = true,
+                        MaxAge =
+                            string.Equals(pass.Status, "APPLIED",
+                                StringComparison.OrdinalIgnoreCase)
+                                ? TimeSpan.FromMinutes(3)
+                                : TimeSpan.FromDays(30)
+                    };
+            }
+
+            return this.Ok(pass);
         }
     }
 }
