@@ -3,12 +3,11 @@
     using System.Collections.Generic;
 
     using Amazon.CDK;
-    using Amazon.CDK.AWS.APIGatewayv2;
-    using Amazon.CDK.AWS.APIGatewayv2.Integrations;
+    using Amazon.CDK.AWS.APIGateway;
     using Amazon.CDK.AWS.CertificateManager;
-    using Amazon.CDK.AWS.CloudWatch;
     using Amazon.CDK.AWS.DynamoDB;
     using Amazon.CDK.AWS.IAM;
+    using Amazon.CDK.AWS.Kinesis;
     using Amazon.CDK.AWS.Lambda;
     using Amazon.CDK.AWS.Route53;
     using Amazon.CDK.AWS.Route53.Targets;
@@ -31,7 +30,8 @@
             var name = $"{app}_{subDomain}_{version}";
 
             var lambda = new Function(this, "Lambda",
-                new FunctionProps {
+                new FunctionProps
+                {
                     FunctionName = name,
                     Handler =
                         "MovementPass.Public.Api::MovementPass.Public.Api.LambdaEntryPoint::FunctionHandlerAsync",
@@ -48,7 +48,8 @@
                 });
 
             lambda.AddToRolePolicy(new PolicyStatement(
-                new PolicyStatementProps {
+                new PolicyStatementProps
+                {
                     Effect = Effect.ALLOW,
                     Actions = new[] { "ssm:GetParametersByPath" },
                     Resources = new[]
@@ -91,64 +92,169 @@
 
             photoBucket.GrantPut(lambda);
 
-            var integration = new LambdaProxyIntegration(
-                new LambdaProxyIntegrationProps
+            var stream = Stream.FromStreamArn(this, "Stream", "");
+
+            var role = new Role(this, "Role",
+                new RoleProps
                 {
-                    Handler = lambda,
-                    PayloadFormatVersion = PayloadFormatVersion.VERSION_2_0
+                    AssumedBy = new ServicePrincipal("apigateway.amazonaws.com")
                 });
 
-            var api = new HttpApi(this, "Api", new HttpApiProps
-            {
-                ApiName = name,
-                DefaultIntegration = integration,
-                CorsPreflight = new CorsPreflightOptions
+            stream.GrantWrite(role);
+
+            var lambdaIntegration = new LambdaIntegration(
+                lambda,
+                new LambdaIntegrationOptions { Proxy = true });
+
+            var api = new RestApi(this, "Api",
+                new RestApiProps
                 {
-                    AllowOrigins = new []{"*"},
-                    AllowMethods = new []
+                    RestApiName = name,
+                    MinimumCompressionSize = 1024,
+                    EndpointTypes = new[] { EndpointType.REGIONAL },
+                    DefaultCorsPreflightOptions = new CorsOptions
                     {
-                        CorsHttpMethod.GET,
-                        CorsHttpMethod.POST
+                        AllowOrigins = new[] { "*" },
+                        AllowMethods = new[] { "GET", "POST" },
+                        AllowHeaders =
+                            new[] { "Authorization", "Content-Type" },
+                        MaxAge = Duration.Days(365)
                     },
-                    AllowHeaders = new []{"Authorization", "Content-Type"},
-                    MaxAge = Duration.Days(365)
-                },
-                DisableExecuteApiEndpoint = true,
-                CreateDefaultStage = false
+                    DeployOptions = new StageOptions
+                    {
+                        MetricsEnabled = true,
+                        TracingEnabled = true,
+                        LoggingLevel = MethodLoggingLevel.ERROR,
+                        StageName = version
+                    },
+                    CloudWatchRole = true,
+                    DefaultIntegration = lambdaIntegration
+                });
+
+            var proxyResource = api.Root.AddProxy(new ProxyResourceOptions
+            {
+                AnyMethod = false
             });
+
+            proxyResource.AddMethod("GET");
+            proxyResource.AddMethod("POST");
+
+            var kinesisIntegration = new AwsIntegration(
+                new AwsIntegrationProps
+                {
+                    Service = "kinesis",
+                    Action = "PutRecord",
+                    IntegrationHttpMethod = "POST",
+                    Options = new IntegrationOptions
+                    {
+                        PassthroughBehavior = PassthroughBehavior.NEVER,
+                        ConnectionType = ConnectionType.INTERNET,
+                        CredentialsRole = role,
+                        RequestParameters =
+                            new Dictionary<string, string> {
+                                {
+                                    "integration.request.header.Content-Type",
+                                    "'application/json'"
+                                }
+                            },
+                        RequestTemplates =
+                            new Dictionary<string, string>
+                            {
+                                {
+                                    "application/json",
+                                    this.ToJsonString(new
+                                    {
+                                        stream.StreamName,
+                                        Data = "$util.base64Encode($input.json('$'))",
+                                        PartitionKey = "$input.params().header.get('authorization')"
+                                    })
+                                }
+                            },
+                        IntegrationResponses = new IIntegrationResponse[]
+                        {
+                            new IntegrationResponse
+                            {
+                                StatusCode = "200",
+                                ResponseTemplates = new Dictionary<string, string>
+                                {
+                                    { "application/json", "Ok" }
+                                },
+                                SelectionPattern = "200"
+                            },
+                            new IntegrationResponse
+                            {
+                                StatusCode = "500",
+                                ResponseTemplates =
+                                    new Dictionary<string, string>
+                                    {
+                                        { "application/json", "Error" }
+                                    },
+                                SelectionPattern = "500"
+                            }
+                        }
+                    }
+                });
+
+            api.Root.AddResource("passes").AddMethod("POST", kinesisIntegration,
+                new MethodOptions {
+                    MethodResponses = new IMethodResponse[]
+                    {
+                        new MethodResponse
+                        {
+                            StatusCode = "200",
+                            ResponseParameters = new Dictionary<string, bool>
+                            {
+                                { "method.response.header.Content-Type", true }
+                            }
+                        },
+                        new MethodResponse {
+                            StatusCode = "500",
+                            ResponseParameters = new Dictionary<string, bool>
+                            {
+                                { "method.response.header.Content-Type", true }
+                            }
+                        }
+                    }
+                });
 
             var rootDomain = (string)this.Node.TryGetContext("domain");
 
             var certificateArn = StringParameter.ValueForStringParameter(
-                    this,
-                    $"{configRoot}/serverCertificateArn");
+                this,
+                $"{configRoot}/serverCertificateArn");
 
             var certificate = Certificate.FromCertificateArn(
-                    this,
-                    "CertificateArn",
-                    certificateArn);
-
-            var domainName = new DomainName(
                 this,
-                "Domain",
+                "CertificateArn",
+                certificateArn);
+
+            var domainName = new DomainName_(this, "DomainName",
                 new DomainNameProps
                 {
                     DomainName = $"{subDomain}.{rootDomain}",
+                    EndpointType = EndpointType.REGIONAL,
+                    SecurityPolicy = SecurityPolicy.TLS_1_2,
                     Certificate = certificate
                 });
 
-            var stage = api.AddStage("Stage", new HttpStageOptions
-            {
-                StageName = version,
-                AutoDeploy = true,
-                DomainMapping = new DomainMappingOptions
+            // ReSharper disable once ObjectCreationAsStatement
+            new BasePathMapping(this, $"ApiMapping",
+                new BasePathMappingProps
                 {
+                    RestApi = api,
                     DomainName = domainName,
-                    MappingKey = version
-                }
-            });
+                    BasePath = version
+                });
 
-            stage.Metric("", new MetricOptions());
+            var domain = DomainName_.FromDomainNameAttributes(
+                this,
+                "Domain",
+                new DomainNameAttributes
+                {
+                    DomainName = domainName.DomainName,
+                    DomainNameAliasHostedZoneId = domainName.DomainNameAliasHostedZoneId,
+                    DomainNameAliasTarget = domainName.DomainNameAliasDomainName
+                });
 
             var zone = HostedZone.FromLookup(
                 this,
@@ -159,16 +265,11 @@
                 });
 
             // ReSharper disable once ObjectCreationAsStatement
-            new ARecord(
-                this,
-                "Mount",
+            new ARecord(this, "Mount",
                 new ARecordProps
                 {
                     RecordName = subDomain,
-                    Target = RecordTarget.FromAlias(
-                        new ApiGatewayv2DomainProperties(
-                            domainName.RegionalDomainName,
-                            domainName.RegionalHostedZoneId)),
+                    Target = RecordTarget.FromAlias(new ApiGatewayDomain(domain)),
                     Zone = zone
                 });
         }
