@@ -137,7 +137,7 @@
                     Certificate = certificate
                 });
 
-            var stage = api.AddStage("Stage", new HttpStageOptions
+            api.AddStage("Stage", new HttpStageOptions
             {
                 StageName = version,
                 AutoDeploy = true,
@@ -147,8 +147,6 @@
                     MappingKey = version
                 }
             });
-
-            stage.Metric("", new MetricOptions());
 
             var zone = HostedZone.FromLookup(
                 this,
