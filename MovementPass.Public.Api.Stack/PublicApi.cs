@@ -6,7 +6,6 @@
     using Amazon.CDK.AWS.APIGatewayv2;
     using Amazon.CDK.AWS.APIGatewayv2.Integrations;
     using Amazon.CDK.AWS.CertificateManager;
-    using Amazon.CDK.AWS.CloudWatch;
     using Amazon.CDK.AWS.DynamoDB;
     using Amazon.CDK.AWS.IAM;
     using Amazon.CDK.AWS.Lambda;
