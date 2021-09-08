@@ -12,9 +12,8 @@
     using Amazon.CDK.AWS.Route53;
     using Amazon.CDK.AWS.Route53.Targets;
     using Amazon.CDK.AWS.S3;
-    using Amazon.CDK.AWS.SSM;
 
-    public sealed class PublicApi : Stack
+    public sealed class PublicApi : BaseStack
     {
         public PublicApi(
             Construct scope,
@@ -23,15 +22,10 @@
         {
             const string subDomain = "public-api";
 
-            var app = (string)this.Node.TryGetContext("app");
-            var version = (string)this.Node.TryGetContext("version");
-
-            var configRoot = $"/{app}/{version}";
-            var name = $"{app}_{subDomain}_{version}";
+            var name = $"{this.App}_{subDomain}_{this.Version}";
 
             var lambda = new Function(this, "Lambda",
-                new FunctionProps
-                {
+                new FunctionProps {
                     FunctionName = name,
                     Handler =
                         "MovementPass.Public.Api::MovementPass.Public.Api.LambdaEntryPoint::FunctionHandlerAsync",
@@ -40,29 +34,26 @@
                     MemorySize = 3008,
                     Code = Code.FromAsset($"dist/{name}.zip"),
                     Tracing = Tracing.ACTIVE,
-                    Environment = new Dictionary<string, string>
-                    {
+                    Environment = new Dictionary<string, string> {
                         { "ASPNETCORE_ENVIRONMENT", "Production" },
-                        { "CONFIG_ROOT_KEY", configRoot }
+                        { "CONFIG_ROOT_KEY", this.ConfigRootKey }
                     }
                 });
 
             lambda.AddToRolePolicy(new PolicyStatement(
-                new PolicyStatementProps
-                {
+                new PolicyStatementProps {
                     Effect = Effect.ALLOW,
                     Actions = new[] { "ssm:GetParametersByPath" },
-                    Resources = new[]
-                    {
-                        $"arn:aws:ssm:{this.Region}:{this.Account}:parameter{configRoot}"
+                    Resources = new[] {
+                        $"arn:aws:ssm:{this.Region}:{this.Account}:parameter{this.ConfigRootKey}"
                     }
                 }));
 
             foreach (var partialName in new[] { "applicants", "passes" })
             {
-                var tableName = StringParameter.ValueForStringParameter(
-                    this,
-                    $"{configRoot}/dynamodbTables/{partialName}");
+                var tableName =
+                    this.GetParameterStoreValue(
+                        $"dynamodbTables/{partialName}");
 
                 var table = Table.FromTableArn(
                     this,
@@ -73,17 +64,15 @@
 
                 lambda.AddToRolePolicy(
                     new PolicyStatement(
-                        new PolicyStatementProps
-                        {
+                        new PolicyStatementProps {
                             Effect = Effect.ALLOW,
                             Actions = new[] { "dynamodb:Query" },
                             Resources = new[] { $"{table.TableArn}/index/*" }
                         }));
             }
 
-            var photoBucketName = StringParameter.ValueForStringParameter(
-                this,
-                $"{configRoot}/photoBucket/name");
+            var photoBucketName =
+                this.GetParameterStoreValue("photoBucket/name");
 
             var photoBucket = Bucket.FromBucketName(
                 this,
@@ -92,11 +81,11 @@
 
             photoBucket.GrantPut(lambda);
 
-            var stream = Stream.FromStreamArn(this, "Stream", "");
+            var passesStreamArn = this.GetParameterStoreValue("kinesis/passes");
+            var stream = Stream.FromStreamArn(this, "Stream", passesStreamArn);
 
             var role = new Role(this, "Role",
-                new RoleProps
-                {
+                new RoleProps {
                     AssumedBy = new ServicePrincipal("apigateway.amazonaws.com")
                 });
 
@@ -107,46 +96,40 @@
                 new LambdaIntegrationOptions { Proxy = true });
 
             var api = new RestApi(this, "Api",
-                new RestApiProps
-                {
+                new RestApiProps {
                     RestApiName = name,
                     MinimumCompressionSize = 1024,
                     EndpointTypes = new[] { EndpointType.REGIONAL },
-                    DefaultCorsPreflightOptions = new CorsOptions
-                    {
+                    DefaultCorsPreflightOptions = new CorsOptions {
                         AllowOrigins = new[] { "*" },
                         AllowMethods = new[] { "GET", "POST" },
                         AllowHeaders =
                             new[] { "Authorization", "Content-Type" },
                         MaxAge = Duration.Days(365)
                     },
-                    DeployOptions = new StageOptions
-                    {
+                    DeployOptions = new StageOptions {
                         MetricsEnabled = true,
                         TracingEnabled = true,
                         LoggingLevel = MethodLoggingLevel.ERROR,
-                        StageName = version
+                        StageName = this.Version
                     },
                     CloudWatchRole = true,
                     DefaultIntegration = lambdaIntegration
                 });
 
-            var proxyResource = api.Root.AddProxy(new ProxyResourceOptions
-            {
-                AnyMethod = false
-            });
+            var proxyResource =
+                api.Root.AddProxy(
+                    new ProxyResourceOptions { AnyMethod = false });
 
             proxyResource.AddMethod("GET");
             proxyResource.AddMethod("POST");
 
             var kinesisIntegration = new AwsIntegration(
-                new AwsIntegrationProps
-                {
+                new AwsIntegrationProps {
                     Service = "kinesis",
                     Action = "PutRecord",
                     IntegrationHttpMethod = "POST",
-                    Options = new IntegrationOptions
-                    {
+                    Options = new IntegrationOptions {
                         PassthroughBehavior = PassthroughBehavior.NEVER,
                         ConnectionType = ConnectionType.INTERNET,
                         CredentialsRole = role,
@@ -158,35 +141,31 @@
                                 }
                             },
                         RequestTemplates =
-                            new Dictionary<string, string>
-                            {
+                            new Dictionary<string, string> {
                                 {
                                     "application/json",
-                                    this.ToJsonString(new
-                                    {
+                                    this.ToJsonString(new {
                                         stream.StreamName,
-                                        Data = "$util.base64Encode($input.json('$'))",
-                                        PartitionKey = "$input.params().header.get('authorization')"
+                                        Data =
+                                            "$util.base64Encode($input.json('$'))",
+                                        PartitionKey =
+                                            "$input.params().header.get('authorization')"
                                     })
                                 }
                             },
-                        IntegrationResponses = new IIntegrationResponse[]
-                        {
-                            new IntegrationResponse
-                            {
+                        IntegrationResponses = new IIntegrationResponse[] {
+                            new IntegrationResponse {
                                 StatusCode = "200",
-                                ResponseTemplates = new Dictionary<string, string>
-                                {
-                                    { "application/json", "Ok" }
-                                },
+                                ResponseTemplates =
+                                    new Dictionary<string, string> {
+                                        { "application/json", "Ok" }
+                                    },
                                 SelectionPattern = "200"
                             },
-                            new IntegrationResponse
-                            {
+                            new IntegrationResponse {
                                 StatusCode = "500",
                                 ResponseTemplates =
-                                    new Dictionary<string, string>
-                                    {
+                                    new Dictionary<string, string> {
                                         { "application/json", "Error" }
                                     },
                                 SelectionPattern = "500"
@@ -197,31 +176,24 @@
 
             api.Root.AddResource("passes").AddMethod("POST", kinesisIntegration,
                 new MethodOptions {
-                    MethodResponses = new IMethodResponse[]
-                    {
-                        new MethodResponse
-                        {
+                    MethodResponses = new IMethodResponse[] {
+                        new MethodResponse {
                             StatusCode = "200",
-                            ResponseParameters = new Dictionary<string, bool>
-                            {
+                            ResponseParameters = new Dictionary<string, bool> {
                                 { "method.response.header.Content-Type", true }
                             }
                         },
                         new MethodResponse {
                             StatusCode = "500",
-                            ResponseParameters = new Dictionary<string, bool>
-                            {
+                            ResponseParameters = new Dictionary<string, bool> {
                                 { "method.response.header.Content-Type", true }
                             }
                         }
                     }
                 });
 
-            var rootDomain = (string)this.Node.TryGetContext("domain");
-
-            var certificateArn = StringParameter.ValueForStringParameter(
-                this,
-                $"{configRoot}/serverCertificateArn");
+            var certificateArn =
+                this.GetParameterStoreValue("serverCertificateArn");
 
             var certificate = Certificate.FromCertificateArn(
                 this,
@@ -229,9 +201,8 @@
                 certificateArn);
 
             var domainName = new DomainName_(this, "DomainName",
-                new DomainNameProps
-                {
-                    DomainName = $"{subDomain}.{rootDomain}",
+                new DomainNameProps {
+                    DomainName = $"{subDomain}.{this.Domain}",
                     EndpointType = EndpointType.REGIONAL,
                     SecurityPolicy = SecurityPolicy.TLS_1_2,
                     Certificate = certificate
@@ -239,37 +210,33 @@
 
             // ReSharper disable once ObjectCreationAsStatement
             new BasePathMapping(this, $"ApiMapping",
-                new BasePathMappingProps
-                {
+                new BasePathMappingProps {
                     RestApi = api,
                     DomainName = domainName,
-                    BasePath = version
+                    BasePath = this.Version
                 });
 
             var domain = DomainName_.FromDomainNameAttributes(
                 this,
                 "Domain",
-                new DomainNameAttributes
-                {
+                new DomainNameAttributes {
                     DomainName = domainName.DomainName,
-                    DomainNameAliasHostedZoneId = domainName.DomainNameAliasHostedZoneId,
+                    DomainNameAliasHostedZoneId =
+                        domainName.DomainNameAliasHostedZoneId,
                     DomainNameAliasTarget = domainName.DomainNameAliasDomainName
                 });
 
             var zone = HostedZone.FromLookup(
                 this,
                 "Zone",
-                new HostedZoneProviderProps
-                {
-                    DomainName = rootDomain
-                });
+                new HostedZoneProviderProps { DomainName = this.Domain });
 
             // ReSharper disable once ObjectCreationAsStatement
             new ARecord(this, "Mount",
-                new ARecordProps
-                {
+                new ARecordProps {
                     RecordName = subDomain,
-                    Target = RecordTarget.FromAlias(new ApiGatewayDomain(domain)),
+                    Target =
+                        RecordTarget.FromAlias(new ApiGatewayDomain(domain)),
                     Zone = zone
                 });
         }
