@@ -18,6 +18,8 @@ updates:
     directory: "/MovementPass.Public.Api.Tests"
     schedule:
       interval: "monthly"
+    ignore:
+      - dependency-name: "Microsoft.AspNetCore.Authentication.JwtBearer"
     open-pull-requests-limit: 128
 
   - package-ecosystem: "nuget"
