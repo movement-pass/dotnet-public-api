@@ -3,11 +3,12 @@
     using System.Collections.Generic;
 
     using Amazon.CDK;
+    using Amazon.CDK.AWS.IAM;
     using Amazon.CDK.AWS.Kinesis;
     using Amazon.CDK.AWS.Lambda;
     using Amazon.CDK.AWS.Lambda.EventSources;
 
-    public class BackgroundJob : BaseStack
+    public sealed class BackgroundJob : BaseStack
     {
         public BackgroundJob(
             Construct scope,
@@ -34,6 +35,15 @@
                         { "CONFIG_ROOT_KEY", this.ConfigRootKey }
                     }
                 });
+
+            lambda.AddToRolePolicy(new PolicyStatement(
+                new PolicyStatementProps {
+                    Effect = Effect.ALLOW,
+                    Actions = new[] { "ssm:GetParametersByPath" },
+                    Resources = new[] {
+                        $"arn:aws:ssm:{this.Region}:{this.Account}:parameter{this.ConfigRootKey}"
+                    }
+                }));
 
             lambda.AddEventSource(new KinesisEventSource(stream,
                 new KinesisEventSourceProps {

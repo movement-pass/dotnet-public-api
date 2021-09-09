@@ -147,7 +147,7 @@
                                     "application/json",
                                     JsonSerializer.Serialize(new {
                                         stream.StreamName,
-                                        Data = "$util.base64Encode($input.json('$'))",
+                                        Data = "$util.base64Encode($input.body)",
                                         PartitionKey = "$context.requestId"
                                     })
                                 }
