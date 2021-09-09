@@ -1,5 +1,13 @@
-name: Deploy
-on: [push, pull_request]
+name: Background Job
+on:
+  push:
+    paths:
+      - 'MovementPass.Public.Api.BackgroundJob/**'
+      - '.github/workflows/background-job.yml'
+  pull_request:
+    paths:
+      - 'MovementPass.Public.Api.BackgroundJob/**'
+      - '.github/workflows/background-job.yml'
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -19,15 +27,16 @@ jobs:
         run: |
           dotnet restore
           dotnet test --no-restore --verbosity normal
-          cd MovementPass.Public.Api
-          dotnet lambda package -o movement-pass_public-api_v1.zip
+          cd MovementPass.Public.Api.BackgroundJob
+          dotnet lambda package -o movement-pass_public-api-background-job_v1.zip
 
       - name: Update
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && env.AWS_REGION != '' }}
         uses: kazimanzurrashid/aws-lambda-update-action@v1
         with:
-          zip-file: MovementPass.Public.Api/movement-pass_public-api_v1.zip
+          zip-file: MovementPass.Public.Api.BackgroundJob/movement-pass_public-api-background-job_v1.zip
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+

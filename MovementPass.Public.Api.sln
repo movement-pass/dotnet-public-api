@@ -21,9 +21,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{A065
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{423E15BF-DB22-43DF-A33C-186046475CC8}"
-	ProjectSection(SolutionItems) = preProject
-		.github\workflows\cd.yml = .github\workflows\cd.yml
-	EndProjectSection
+ProjectSection(SolutionItems) = preProject
+	.github\workflows\background-job.yml = .github\workflows\background-job.yml
+	.github\workflows\public-api.yml = .github\workflows\public-api.yml
+EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MovementPass.Public.Api.BackgroundJob", "MovementPass.Public.Api.BackgroundJob\MovementPass.Public.Api.BackgroundJob.csproj", "{BA9E78F4-C083-466D-8B9C-141D7D5A99F6}"
 EndProject
