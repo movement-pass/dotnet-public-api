@@ -2,7 +2,6 @@
 {
     using System.Collections.Generic;
     using System.Text.Json;
-
     using Amazon.CDK;
     using Amazon.CDK.AWS.APIGateway;
     using Amazon.CDK.AWS.CertificateManager;
@@ -139,17 +138,22 @@
                                 {
                                     "integration.request.header.Content-Type",
                                     "'application/json'"
+                                }, {
+                                    "integration.request.header.Access-Control-Allow-Origin",
+                                    "'*'"
                                 }
                             },
                         RequestTemplates =
                             new Dictionary<string, string> {
                                 {
                                     "application/json",
-                                    JsonSerializer.Serialize(new {
-                                        stream.StreamName,
-                                        Data = "$util.base64Encode($input.body)",
-                                        PartitionKey = "$context.requestId"
-                                    })
+                                    JsonSerializer.Serialize(
+                                        new {
+                                            stream.StreamName,
+                                            Data =
+                                                "$util.base64Encode($input.body)",
+                                            PartitionKey = "$context.requestId"
+                                        })
                                 }
                             },
                         IntegrationResponses = new IIntegrationResponse[] {
@@ -157,7 +161,12 @@
                                 StatusCode = "200",
                                 ResponseTemplates =
                                     new Dictionary<string, string> {
-                                        { "application/json", "Ok" }
+                                        {
+                                            "application/json",
+                                            JsonSerializer.Serialize(new {
+                                                success = true
+                                            })
+                                        }
                                     },
                                 SelectionPattern = "200"
                             },
@@ -165,7 +174,12 @@
                                 StatusCode = "500",
                                 ResponseTemplates =
                                     new Dictionary<string, string> {
-                                        { "application/json", "Error" }
+                                        {
+                                            "application/json",
+                                            JsonSerializer.Serialize(new {
+                                                error = "internal server error!"
+                                            })
+                                        }
                                     },
                                 SelectionPattern = "500"
                             }
@@ -179,13 +193,21 @@
                         new MethodResponse {
                             StatusCode = "200",
                             ResponseParameters = new Dictionary<string, bool> {
-                                { "method.response.header.Content-Type", true }
+                                { "method.response.header.Content-Type", true },
+                                {
+                                    "method.response.header.Access-Control-Allow-Origin",
+                                    true
+                                }
                             }
                         },
                         new MethodResponse {
                             StatusCode = "500",
                             ResponseParameters = new Dictionary<string, bool> {
-                                { "method.response.header.Content-Type", true }
+                                { "method.response.header.Content-Type", true },
+                                {
+                                    "method.response.header.Access-Control-Allow-Origin",
+                                    true
+                                }
                             }
                         }
                     }
