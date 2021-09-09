@@ -138,9 +138,6 @@
                                 {
                                     "integration.request.header.Content-Type",
                                     "'application/json'"
-                                }, {
-                                    "integration.request.header.Access-Control-Allow-Origin",
-                                    "'*'"
                                 }
                             },
                         RequestTemplates =
@@ -159,6 +156,13 @@
                         IntegrationResponses = new IIntegrationResponse[] {
                             new IntegrationResponse {
                                 StatusCode = "200",
+                                ResponseParameters =
+                                    new Dictionary<string, string> {
+                                        {
+                                            "method.response.header.Access-Control-Allow-Origin",
+                                            "'*'"
+                                        }
+                                    },
                                 ResponseTemplates =
                                     new Dictionary<string, string> {
                                         {
@@ -172,6 +176,13 @@
                             },
                             new IntegrationResponse {
                                 StatusCode = "500",
+                                ResponseParameters =
+                                    new Dictionary<string, string> {
+                                        {
+                                            "method.response.header.Access-Control-Allow-Origin",
+                                            "'*'"
+                                        }
+                                    },
                                 ResponseTemplates =
                                     new Dictionary<string, string> {
                                         {
@@ -193,8 +204,7 @@
                         new MethodResponse {
                             StatusCode = "200",
                             ResponseParameters = new Dictionary<string, bool> {
-                                { "method.response.header.Content-Type", true },
-                                {
+                                { "method.response.header.Content-Type", true }, {
                                     "method.response.header.Access-Control-Allow-Origin",
                                     true
                                 }
@@ -203,8 +213,7 @@
                         new MethodResponse {
                             StatusCode = "500",
                             ResponseParameters = new Dictionary<string, bool> {
-                                { "method.response.header.Content-Type", true },
-                                {
+                                { "method.response.header.Content-Type", true }, {
                                     "method.response.header.Access-Control-Allow-Origin",
                                     true
                                 }
