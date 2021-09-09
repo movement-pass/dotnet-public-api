@@ -11,6 +11,7 @@ namespace MovementPass.Public.Api.BackgroundJob
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
 
     using Amazon.DynamoDBv2;
     using Amazon.Lambda.KinesisEvents;
@@ -40,6 +41,7 @@ namespace MovementPass.Public.Api.BackgroundJob
         private static ServiceProvider CreateContainer()
         {
             var config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", false, false)
                 .AddSystemsManager(
                     Environment.GetEnvironmentVariable("CONFIG_ROOT_KEY"))
                 .Build();
@@ -60,6 +62,9 @@ namespace MovementPass.Public.Api.BackgroundJob
                 AWSXRayRecorder.InitializeInstance(config);
                 AWSSDKHandler.RegisterXRayForAllServices();
             }
+
+            services.AddLogging(options =>
+                options.AddLambdaLogger(config, "logging"));
 
             config.Apply<DynamoDBTablesOptions>(services);
             config.Apply<JwtOptions>(services);

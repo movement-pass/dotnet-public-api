@@ -5,6 +5,8 @@
     using System.ComponentModel.DataAnnotations;
     using System.Linq;
 
+    using Microsoft.Extensions.Logging;
+
     using Amazon.Lambda.KinesisEvents;
 
     using ExtensionMethods;
@@ -20,9 +22,12 @@
     {
         private readonly IRecordDeserializer _deserializer;
         private readonly ITokenValidator _tokenValidator;
+        private readonly ILogger<DataReducer> _logger;
 
-        public DataReducer(IRecordDeserializer deserializer,
-            ITokenValidator tokenValidator)
+        public DataReducer(
+            IRecordDeserializer deserializer,
+            ITokenValidator tokenValidator,
+            ILogger<DataReducer> logger)
         {
             this._deserializer = deserializer ??
                                  throw new ArgumentNullException(
@@ -31,6 +36,9 @@
             this._tokenValidator = tokenValidator ??
                                    throw new ArgumentNullException(
                                        nameof(tokenValidator));
+
+            this._logger = logger ??
+                           throw new ArgumentNullException(nameof(logger));
         }
 
         public IEnumerable<Pass> Reduce(
@@ -41,15 +49,28 @@
                 throw new ArgumentNullException(nameof(records));
             }
 
-            return records
+            var deserializedRecords = records
                 .Select(record =>
                     this._deserializer
-                        .Deserialize<ApplyRequest>(record.Kinesis))
+                        .Deserialize<ApplyRequest>(record.Kinesis)).ToList();
+
+            this._logger.LogInformation(
+                "Deserialized records: {@DeserializedCount}",
+                deserializedRecords.Count);
+
+            var inputValidatedRecords = deserializedRecords
                 .Where(request =>
                     Validator.TryValidateObject(
                         request,
                         new ValidationContext(request),
                         new List<ValidationResult>()))
+                .ToList();
+
+            this._logger.LogInformation(
+                "Input validated records: {@InputValidatedCount}",
+                inputValidatedRecords.Count);
+
+            var validTokenRecords = inputValidatedRecords
                 .Where(request =>
                 {
                     var userId = this._tokenValidator.Validate(request.Token);
@@ -62,11 +83,16 @@
                     request.ApplicantId = userId;
 
                     return true;
-                })
+                }).ToList();
+
+            this._logger.LogInformation(
+                "Validated token records: {@validTokenCount}",
+                validTokenRecords.Count);
+
+            var transformedRecords = validTokenRecords
                 .Select(request =>
                 {
-                    var pass = new Pass
-                    {
+                    var pass = new Pass {
                         Id = IdGenerator.Generate(),
                         StartAt = request.DateTime,
                         EndAt =
@@ -90,8 +116,13 @@
                     }
 
                     return pass;
-                })
-                .ToList();
+                }).ToList();
+
+            this._logger.LogInformation(
+                "Transformed records: {@transformedCount}",
+                transformedRecords.Count);
+
+            return transformedRecords;
         }
     }
 }
