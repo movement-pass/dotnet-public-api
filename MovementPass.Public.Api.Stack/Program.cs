@@ -1,5 +1,9 @@
 ﻿namespace MovementPass.Public.Api.Stack
 {
+    using System;
+    using System.Linq;
+    using System.Reflection;
+
     using Amazon.CDK;
 
     using SysEnv = System.Environment;
@@ -17,14 +21,22 @@
                 Region = SysEnv.GetEnvironmentVariable("CDK_DEFAULT_REGION")
             };
 
+            var stackTypes = Assembly.GetExecutingAssembly().GetTypes()
+                .Where(type => type.IsClass && !type.IsAbstract)
+                .Where(type => typeof(Stack).IsAssignableFrom(type))
+                .ToList();
+
             var prefix = (string)app.Node.TryGetContext("app");
             var version = (string)app.Node.TryGetContext("version");
 
-            // ReSharper disable once ObjectCreationAsStatement
-            new PublicApi(
-                app,
-                $"{prefix}-public-api-{version}",
-                new StackProps { Env = env });
+            foreach (var type in stackTypes)
+            {
+                Activator.CreateInstance(
+                    type,
+                    app,
+                    $"{prefix}-{type.Name}-{version}".ToLowerInvariant(),
+                    new StackProps { Env = env });
+            }
 
             app.Synth();
         }

@@ -1,4 +1,4 @@
-root = true
+﻿root = true
 
 # Rules in this file were initially inferred by Visual Studio IntelliCode from the C:\projects\local\smart\SmartUmrah\src\Smart.Data.NoSQL\ codebase based on best match to current usage at 12/15/20
 # You can modify the rules from these initially generated values to suit your own policies
@@ -132,7 +132,6 @@ dotnet_style_qualification_for_method = true:suggestion
 #prefer properties to be prefaced with this. in C# or Me. in Visual Basic
 dotnet_style_qualification_for_property = true:suggestion
 
-
 # Overrides
 # =========
 
@@ -142,11 +141,8 @@ dotnet_diagnostic.CA1014.severity = none
 # CA1308: Normalize strings to uppercase
 dotnet_diagnostic.CA1308.severity = none
 
-# CA1711: Identifiers should not have incorrect suffix
-dotnet_diagnostic.CA1711.severity = none
-
 # CA1716: Identifiers should not match keywords
 dotnet_diagnostic.CA1716.severity = none
 
-# CA1806: Do not ignore method results
-dotnet_diagnostic.CA1806.severity = none
+# CA1822: Mark members as static
+dotnet_diagnostic.CA1822.severity = none

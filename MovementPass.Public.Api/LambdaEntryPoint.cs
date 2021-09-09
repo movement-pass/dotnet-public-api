@@ -7,7 +7,7 @@ namespace MovementPass.Public.Api
 
     using Amazon.Lambda.AspNetCoreServer;
 
-    public class LambdaEntryPoint : APIGatewayHttpApiV2ProxyFunction
+    public class LambdaEntryPoint : APIGatewayProxyFunction
     {
         protected override void Init(IWebHostBuilder builder) =>
             builder.ConfigureAppConfiguration(
