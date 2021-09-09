@@ -20,4 +20,6 @@ dotnet lambda package -o "$($app)_$($name)-background-job_$($version).zip"
 Set-Location -Path "../MovementPass.Public.Api.Stack"
 Move-Item "../MovementPass.Public.Api.BackgroundJob/$($app)_$($name)-background-job_$($version).zip" $location -Force
 
-# cdk deploy --require-approval never --profile ${awsProfile}
+cdk deploy $app-passesstream-$version --require-approval never --profile ${awsProfile}
+cdk deploy $app-publicapi-$version --require-approval never --profile ${awsProfile}
+cdk deploy $app-backgroundjob-$version --require-approval never --profile ${awsProfile}
