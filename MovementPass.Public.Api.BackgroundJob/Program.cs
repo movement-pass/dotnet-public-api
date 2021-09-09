@@ -66,6 +66,7 @@ namespace MovementPass.Public.Api.BackgroundJob
 
             services.AddSingleton<IRecordDeserializer, RecordDeserializer>();
             services.AddSingleton<ITokenValidator, TokenValidator>();
+            services.AddSingleton<IDataReducer, DataReducer>();
             services.AddSingleton<IDataLoader, DataLoader>();
             services.AddSingleton<IProcessor, Processor>();
 
