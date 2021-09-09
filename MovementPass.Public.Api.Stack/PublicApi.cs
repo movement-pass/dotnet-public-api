@@ -1,6 +1,7 @@
 ﻿namespace MovementPass.Public.Api.Stack
 {
     using System.Collections.Generic;
+    using System.Text.Json;
 
     using Amazon.CDK;
     using Amazon.CDK.AWS.APIGateway;
@@ -81,8 +82,8 @@
 
             photoBucket.GrantPut(lambda);
 
-            var passesStreamArn = this.GetParameterStoreValue("kinesis/passes");
-            var stream = Stream.FromStreamArn(this, "Stream", passesStreamArn);
+            var streamArn = this.GetParameterStoreValue("kinesis/passes");
+            var stream = Stream.FromStreamArn(this, "Stream", streamArn);
 
             var role = new Role(this, "Role",
                 new RoleProps {
@@ -144,12 +145,10 @@
                             new Dictionary<string, string> {
                                 {
                                     "application/json",
-                                    this.ToJsonString(new {
+                                    JsonSerializer.Serialize(new {
                                         stream.StreamName,
-                                        Data =
-                                            "$util.base64Encode($input.json('$'))",
-                                        PartitionKey =
-                                            "$input.params().header.get('authorization')"
+                                        Data = "$util.base64Encode($input.json('$'))",
+                                        PartitionKey = "$context.requestId"
                                     })
                                 }
                             },
