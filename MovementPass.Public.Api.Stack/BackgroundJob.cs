@@ -3,6 +3,7 @@
     using System.Collections.Generic;
 
     using Amazon.CDK;
+    using Amazon.CDK.AWS.DynamoDB;
     using Amazon.CDK.AWS.IAM;
     using Amazon.CDK.AWS.Kinesis;
     using Amazon.CDK.AWS.Lambda;
@@ -44,6 +45,28 @@
                         $"arn:aws:ssm:{this.Region}:{this.Account}:parameter{this.ConfigRootKey}"
                     }
                 }));
+
+            foreach (var partialName in new[] { "applicants", "passes" })
+            {
+                var tableName =
+                    this.GetParameterStoreValue(
+                        $"dynamodbTables/{partialName}");
+
+                var table = Table.FromTableArn(
+                    this,
+                    $"{partialName}Table",
+                    $"arn:aws:dynamodb:{this.Region}:{this.Account}:table/{tableName}");
+
+                table.GrantReadWriteData(lambda);
+
+                lambda.AddToRolePolicy(
+                    new PolicyStatement(
+                        new PolicyStatementProps {
+                            Effect = Effect.ALLOW,
+                            Actions = new[] { "dynamodb:Query" },
+                            Resources = new[] { $"{table.TableArn}/index/*" }
+                        }));
+            }
 
             lambda.AddEventSource(new KinesisEventSource(stream,
                 new KinesisEventSourceProps {
