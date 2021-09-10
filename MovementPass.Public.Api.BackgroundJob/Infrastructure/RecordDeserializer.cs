@@ -2,11 +2,11 @@
 {
     using System;
     using System.IO;
-    using System.Text;
     using System.Text.Json;
 
-    using Amazon.Lambda.KinesisEvents;
     using Microsoft.Extensions.Logging;
+
+    using Amazon.Lambda.KinesisEvents;
 
     public interface IRecordDeserializer
     {
@@ -15,6 +15,12 @@
 
     public class RecordDeserializer : IRecordDeserializer
     {
+        private static readonly JsonSerializerOptions Settings =
+            new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
         private readonly ILogger<RecordDeserializer> _logger;
 
         public RecordDeserializer(ILogger<RecordDeserializer> logger) =>
@@ -32,7 +38,7 @@
 
             this._logger.LogInformation("Payload: {@payload}", payload);
 
-            return JsonSerializer.Deserialize<T>(payload);
+            return JsonSerializer.Deserialize<T>(payload, Settings);
         }
     }
 }
