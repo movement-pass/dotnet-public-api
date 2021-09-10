@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.Linq;
-    using System.Text.Json;
+
     using Microsoft.Extensions.Logging;
 
     using Amazon.Lambda.KinesisEvents;
@@ -57,8 +57,6 @@
             this._logger.LogInformation(
                 "Deserialized records: {@DeserializedCount}",
                 deserializedRecords.Count);
-
-            this._logger.LogInformation("Deserialized records: {@records}", JsonSerializer.Serialize(deserializedRecords));
 
             var inputValidatedRecords = deserializedRecords
                 .Where(request =>
@@ -123,6 +121,18 @@
             this._logger.LogInformation(
                 "Transformed records: {@transformedCount}",
                 transformedRecords.Count);
+
+            if (deserializedRecords.Count != inputValidatedRecords.Count ||
+                inputValidatedRecords.Count != validTokenRecords.Count ||
+                validTokenRecords.Count != transformedRecords.Count)
+            {
+                this._logger.LogWarning(
+                    "Deserialized: {@deserialized}, valid: {@valid}, token: {@token}, transformed: {@transformed}",
+                    deserializedRecords.Count,
+                    inputValidatedRecords.Count,
+                    validTokenRecords.Count,
+                    transformedRecords.Count);
+            }
 
             return transformedRecords;
         }
