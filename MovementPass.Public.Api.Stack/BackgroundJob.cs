@@ -5,9 +5,9 @@
     using Amazon.CDK;
     using Amazon.CDK.AWS.DynamoDB;
     using Amazon.CDK.AWS.IAM;
-    using Amazon.CDK.AWS.Kinesis;
     using Amazon.CDK.AWS.Lambda;
     using Amazon.CDK.AWS.Lambda.EventSources;
+    using Amazon.CDK.AWS.SQS;
 
     public sealed class BackgroundJob : BaseStack
     {
@@ -18,8 +18,10 @@
         {
             var name = $"{this.App}_public-api-background-job_{this.Version}";
 
-            var passesStreamArn = this.GetParameterStoreValue("kinesis/passes");
-            var stream = Stream.FromStreamArn(this, "Stream", passesStreamArn);
+            var queue = Queue.FromQueueArn(
+                this,
+                "Queue",
+                $"arn:aws:sqs:{this.Region}:{this.Account}:{this.App}_passes_load_{this.Version}");
 
             var lambda = new Function(this, "Lambda",
                 new FunctionProps {
@@ -27,7 +29,7 @@
                     Handler =
                         "MovementPass.Public.Api.BackgroundJob::MovementPass.Public.Api.BackgroundJob.Program::Main",
                     Runtime = Runtime.DOTNET_CORE_3_1,
-                    Timeout = Duration.Minutes(15),
+                    Timeout = Duration.Minutes(5),
                     MemorySize = 3008,
                     Code = Code.FromAsset($"dist/{name}.zip"),
                     Tracing = Tracing.ACTIVE,
@@ -36,6 +38,11 @@
                         { "CONFIG_ROOT_KEY", this.ConfigRootKey }
                     }
                 });
+
+            lambda.AddEventSource(new SqsEventSource(queue,
+                new SqsEventSourceProps { BatchSize = 10 }));
+
+            queue.GrantConsumeMessages(lambda);
 
             lambda.AddToRolePolicy(new PolicyStatement(
                 new PolicyStatementProps {
@@ -67,15 +74,6 @@
                             Resources = new[] { $"{table.TableArn}/index/*" }
                         }));
             }
-
-            lambda.AddEventSource(new KinesisEventSource(stream,
-                new KinesisEventSourceProps {
-                    BatchSize = 1000,
-                    MaxBatchingWindow = Duration.Minutes(1),
-                    StartingPosition = StartingPosition.LATEST
-                }));
-
-            stream.GrantRead(lambda);
         }
     }
 }

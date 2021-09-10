@@ -2,16 +2,17 @@
 {
     using System.Collections.Generic;
     using System.Text.Json;
+
     using Amazon.CDK;
     using Amazon.CDK.AWS.APIGateway;
     using Amazon.CDK.AWS.CertificateManager;
     using Amazon.CDK.AWS.DynamoDB;
     using Amazon.CDK.AWS.IAM;
-    using Amazon.CDK.AWS.Kinesis;
     using Amazon.CDK.AWS.Lambda;
     using Amazon.CDK.AWS.Route53;
     using Amazon.CDK.AWS.Route53.Targets;
     using Amazon.CDK.AWS.S3;
+    using Amazon.CDK.AWS.SQS;
 
     public sealed class PublicApi : BaseStack
     {
@@ -81,15 +82,17 @@
 
             photoBucket.GrantPut(lambda);
 
-            var streamArn = this.GetParameterStoreValue("kinesis/passes");
-            var stream = Stream.FromStreamArn(this, "Stream", streamArn);
+            var queue = Queue.FromQueueArn(
+                this,
+                "Queue",
+                $"arn:aws:sqs:{this.Region}:{this.Account}:{this.App}_passes_load_{this.Version}");
 
             var role = new Role(this, "Role",
                 new RoleProps {
                     AssumedBy = new ServicePrincipal("apigateway.amazonaws.com")
                 });
 
-            stream.GrantWrite(role);
+            queue.GrantSendMessages(role);
 
             var lambdaIntegration = new LambdaIntegration(
                 lambda,
@@ -124,10 +127,10 @@
             proxyResource.AddMethod("GET");
             proxyResource.AddMethod("POST");
 
-            var kinesisIntegration = new AwsIntegration(
+            var queueIntegration = new AwsIntegration(
                 new AwsIntegrationProps {
-                    Service = "kinesis",
-                    Action = "PutRecord",
+                    Service = "sqs",
+                    Path = queue.QueueName,
                     IntegrationHttpMethod = "POST",
                     Options = new IntegrationOptions {
                         PassthroughBehavior = PassthroughBehavior.NEVER,
@@ -137,20 +140,14 @@
                             new Dictionary<string, string> {
                                 {
                                     "integration.request.header.Content-Type",
-                                    "'application/json'"
+                                    "'application/x-www-form-urlencoded'"
                                 }
                             },
                         RequestTemplates =
                             new Dictionary<string, string> {
                                 {
                                     "application/json",
-                                    JsonSerializer.Serialize(
-                                        new {
-                                            stream.StreamName,
-                                            Data =
-                                                "$util.base64Encode($input.body)",
-                                            PartitionKey = "$context.requestId"
-                                        })
+                                    "Action=SendMessage&MessageBody=$util.urlEncode(\"$input.body\")"
                                 }
                             },
                         IntegrationResponses = new IIntegrationResponse[] {
@@ -198,7 +195,7 @@
                     }
                 });
 
-            api.Root.AddResource("passes").AddMethod("POST", kinesisIntegration,
+            api.Root.AddResource("passes").AddMethod("POST", queueIntegration,
                 new MethodOptions {
                     MethodResponses = new IMethodResponse[] {
                         new MethodResponse {

@@ -7,7 +7,7 @@
 
     using Microsoft.Extensions.Logging;
 
-    using Amazon.Lambda.KinesisEvents;
+    using Amazon.Lambda.SQSEvents;
 
     using ExtensionMethods;
     using Infrastructure;
@@ -15,7 +15,7 @@
     public interface IDataReducer
     {
         IEnumerable<Pass> Reduce(
-            IEnumerable<KinesisEvent.KinesisEventRecord> records);
+            IEnumerable<SQSEvent.SQSMessage> records);
     }
 
     public class DataReducer : IDataReducer
@@ -42,7 +42,7 @@
         }
 
         public IEnumerable<Pass> Reduce(
-            IEnumerable<KinesisEvent.KinesisEventRecord> records)
+            IEnumerable<SQSEvent.SQSMessage> records)
         {
             if (records == null)
             {
@@ -52,7 +52,7 @@
             var deserializedRecords = records
                 .Select(record =>
                     this._deserializer
-                        .Deserialize<ApplyRequest>(record.Kinesis)).ToList();
+                        .Deserialize<ApplyRequest>(record.Body)).ToList();
 
             this._logger.LogInformation(
                 "Deserialized records: {@DeserializedCount}",
