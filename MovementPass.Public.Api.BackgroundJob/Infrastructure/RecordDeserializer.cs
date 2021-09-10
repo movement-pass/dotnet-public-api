@@ -21,7 +21,7 @@
                 throw new ArgumentNullException(nameof(record));
             }
 
-            using var reader = new StreamReader(record.Data, Encoding.UTF8);
+            using var reader = new StreamReader(record.Data);
             var payload = reader.ReadToEnd();
 
             return JsonSerializer.Deserialize<T>(payload);
