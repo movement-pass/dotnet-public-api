@@ -1,6 +1,8 @@
 ﻿namespace MovementPass.Public.Api.BackgroundJob.Infrastructure
 {
     using System;
+    using System.IO;
+    using System.Text;
     using System.Text.Json;
 
     using Amazon.Lambda.KinesisEvents;
@@ -19,7 +21,10 @@
                 throw new ArgumentNullException(nameof(record));
             }
 
-            return JsonSerializer.Deserialize<T>(record.Data.ToArray());
+            using var reader = new StreamReader(record.Data, Encoding.UTF8);
+            var payload = reader.ReadToEnd();
+
+            return JsonSerializer.Deserialize<T>(payload);
         }
     }
 }
