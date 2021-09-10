@@ -12,7 +12,8 @@
 
             // ReSharper disable once ObjectCreationAsStatement
             new Queue(this, "LoadQueue",
-                new QueueProps {
+                new QueueProps
+                {
                     QueueName = $"{this.App}_passes_load_{this.Version}",
                     ReceiveMessageWaitTime = Duration.Seconds(20),
                     VisibilityTimeout = Duration.Minutes(5)

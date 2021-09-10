@@ -40,7 +40,11 @@
                 });
 
             lambda.AddEventSource(new SqsEventSource(queue,
-                new SqsEventSourceProps { BatchSize = 10 }));
+                new SqsEventSourceProps
+                {
+                    BatchSize = 1000,
+                    MaxBatchingWindow = Duration.Minutes(1)
+                }));
 
             queue.GrantConsumeMessages(lambda);
 
