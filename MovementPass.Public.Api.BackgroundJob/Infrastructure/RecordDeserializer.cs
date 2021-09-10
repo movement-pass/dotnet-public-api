@@ -6,6 +6,7 @@
     using System.Text.Json;
 
     using Amazon.Lambda.KinesisEvents;
+    using Microsoft.Extensions.Logging;
 
     public interface IRecordDeserializer
     {
@@ -14,6 +15,11 @@
 
     public class RecordDeserializer : IRecordDeserializer
     {
+        private readonly ILogger<RecordDeserializer> _logger;
+
+        public RecordDeserializer(ILogger<RecordDeserializer> logger) =>
+            this._logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
         public T Deserialize<T>(KinesisEvent.Record record)
         {
             if (record == null)
@@ -23,6 +29,8 @@
 
             using var reader = new StreamReader(record.Data);
             var payload = reader.ReadToEnd();
+
+            this._logger.LogInformation("Payload: {@payload}", payload);
 
             return JsonSerializer.Deserialize<T>(payload);
         }
