@@ -4,12 +4,12 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <AWSProjectType>Lambda</AWSProjectType>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
-  </PropertyGroup> 
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Extensions.Configuration.SystemsManager" Version="3.0.0" />
     <PackageReference Include="Amazon.Lambda.Core" Version="2.0.0" />
@@ -30,11 +30,11 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="5.0.0" />   
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.12.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.12.2" />
-    <PackageReference Include="System.Text.Json" Version="5.0.2" />    
+    <PackageReference Include="System.Text.Json" Version="5.0.2" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="appsettings.json" />
