@@ -21,7 +21,7 @@
             var queue = Queue.FromQueueArn(
                 this,
                 "Queue",
-                $"arn:aws:sqs:{this.Region}:{this.Account}:{this.App}_passes_load_{this.Version}");
+                $"arn:aws:sqs:{this.Region}:{this.Account}:{this.App}_passes_load_{this.Version}.fifo");
 
             var lambda = new Function(this, "Lambda",
                 new FunctionProps {
@@ -39,12 +39,7 @@
                     }
                 });
 
-            lambda.AddEventSource(new SqsEventSource(queue,
-                new SqsEventSourceProps
-                {
-                    BatchSize = 1000,
-                    MaxBatchingWindow = Duration.Minutes(1)
-                }));
+            lambda.AddEventSource(new SqsEventSource(queue));
 
             queue.GrantConsumeMessages(lambda);
 

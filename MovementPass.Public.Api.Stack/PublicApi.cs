@@ -85,7 +85,7 @@
             var queue = Queue.FromQueueArn(
                 this,
                 "Queue",
-                $"arn:aws:sqs:{this.Region}:{this.Account}:{this.App}_passes_load_{this.Version}");
+                $"arn:aws:sqs:{this.Region}:{this.Account}:{this.App}_passes_load_{this.Version}.fifo");
 
             var role = new Role(this, "Role",
                 new RoleProps {
@@ -147,7 +147,7 @@
                             new Dictionary<string, string> {
                                 {
                                     "application/json",
-                                    "Action=SendMessage&MessageBody=$util.urlEncode(\"$input.body\")"
+                                    "Action=SendMessage&MessageBody=$util.urlEncode(\"$input.body\")&MessageDeduplicationId=$context.requestId&MessageGroupId=$input.path(\"$.thana\")"
                                 }
                             },
                         IntegrationResponses = new IIntegrationResponse[] {

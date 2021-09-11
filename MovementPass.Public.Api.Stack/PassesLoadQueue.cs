@@ -14,9 +14,11 @@
             new Queue(this, "LoadQueue",
                 new QueueProps
                 {
-                    QueueName = $"{this.App}_passes_load_{this.Version}",
+                    QueueName = $"{this.App}_passes_load_{this.Version}.fifo",
                     ReceiveMessageWaitTime = Duration.Seconds(20),
-                    VisibilityTimeout = Duration.Minutes(5)
+                    VisibilityTimeout = Duration.Minutes(5),
+                    Fifo = true,
+                    DeduplicationScope = DeduplicationScope.MESSAGE_GROUP,
                 });
     }
 }
