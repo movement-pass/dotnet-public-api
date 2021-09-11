@@ -18,7 +18,8 @@
         {
             var name = $"{this.App}_public-api-background-job_{this.Version}";
 
-            var passesStreamArn = this.GetParameterStoreValue("kinesis/passes");
+            var passesStreamArn =
+                this.GetParameterStoreValue("kinesis/passes-load");
             var stream = Stream.FromStreamArn(this, "Stream", passesStreamArn);
 
             var lambda = new Function(this, "Lambda",

@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Text.Json;
+
     using Amazon.CDK;
     using Amazon.CDK.AWS.APIGateway;
     using Amazon.CDK.AWS.CertificateManager;
@@ -81,7 +82,7 @@
 
             photoBucket.GrantPut(lambda);
 
-            var streamArn = this.GetParameterStoreValue("kinesis/passes");
+            var streamArn = this.GetParameterStoreValue("kinesis/passes-load");
             var stream = Stream.FromStreamArn(this, "Stream", streamArn);
 
             var role = new Role(this, "Role",
