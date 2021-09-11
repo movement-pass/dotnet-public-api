@@ -1,13 +1,5 @@
 name: Deploy
-on:
-  push:
-    paths:
-      - 'MovementPass.Public.Api/**'
-      - '.github/workflows/public-api.yml'
-  pull_request:
-    paths:
-      - 'MovementPass.Public.Api/**'
-      - '.github/workflows/public-api.yml'
+on: [push, pull_request]
 jobs:
   deploy:
     runs-on: ubuntu-latest
