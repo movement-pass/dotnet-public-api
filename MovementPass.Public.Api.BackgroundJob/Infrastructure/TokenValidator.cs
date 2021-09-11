@@ -43,13 +43,19 @@
 
             try
             {
-                var principal = handler.ValidateToken(token, this._parameters, out _);
+                var principal =
+                    handler.ValidateToken(token, this._parameters, out _);
 
-                var idClaim = principal.Claims.FirstOrDefault(c => c.Type == "id");
+                var idClaim =
+                    principal.Claims.FirstOrDefault(c => c.Type == "id");
 
                 return idClaim?.Value;
             }
             catch (SecurityTokenValidationException)
+            {
+                return null;
+            }
+            catch (ArgumentException)
             {
                 return null;
             }
