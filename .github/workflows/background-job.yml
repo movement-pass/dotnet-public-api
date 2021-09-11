@@ -26,7 +26,6 @@ jobs:
       - name: Release
         run: |
           dotnet restore
-          dotnet test --no-restore --verbosity normal
           cd MovementPass.Public.Api.BackgroundJob
           dotnet lambda package -o movement-pass_public-api-background-job_v1.zip
 
