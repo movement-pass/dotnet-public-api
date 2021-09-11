@@ -63,10 +63,6 @@
                 this._logger.LogError("Invalid token: {@token}", token);
                 return null;
             }
-            catch (ArgumentException)
-            {
-                return null;
-            }
         }
     }
 }
