@@ -18,6 +18,8 @@
                     ReceiveMessageWaitTime = Duration.Seconds(20),
                     VisibilityTimeout = Duration.Minutes(5),
                     Fifo = true,
+                    ContentBasedDeduplication = true,
+                    FifoThroughputLimit = FifoThroughputLimit.PER_MESSAGE_GROUP_ID,
                     DeduplicationScope = DeduplicationScope.MESSAGE_GROUP,
                 });
     }

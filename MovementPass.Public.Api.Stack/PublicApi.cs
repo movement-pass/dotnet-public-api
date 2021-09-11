@@ -147,7 +147,7 @@
                             new Dictionary<string, string> {
                                 {
                                     "application/json",
-                                    "Action=SendMessage&MessageBody=$util.urlEncode(\"$input.body\")&MessageDeduplicationId=$context.requestId&MessageGroupId=$input.path(\"$.thana\")"
+                                    "Action=SendMessage&MessageBody=$util.urlEncode(\"$input.body\")&MessageGroupId=$input.path(\"$.thana\")"
                                 }
                             },
                         IntegrationResponses = new IIntegrationResponse[] {
