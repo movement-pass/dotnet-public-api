@@ -3,7 +3,7 @@
     using System;
     using System.IdentityModel.Tokens.Jwt;
     using System.Linq;
-
+    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Microsoft.IdentityModel.Tokens;
 
@@ -15,13 +15,19 @@
     public class TokenValidator : ITokenValidator
     {
         private readonly TokenValidationParameters _parameters;
+        private readonly ILogger<TokenValidator > _logger;
 
-        public TokenValidator(IOptions<JwtOptions> options)
+        public TokenValidator(
+            IOptions<JwtOptions> options,
+            ILogger<TokenValidator> logger)
         {
             if (options == null)
             {
                 throw new ArgumentNullException(nameof(options));
             }
+
+            this._logger = logger ??
+                           throw new ArgumentNullException(nameof(logger));
 
             this._parameters = new TokenValidationParameters
             {
@@ -43,14 +49,18 @@
 
             try
             {
-                var principal = handler.ValidateToken(token, this._parameters, out _);
+                var principal =
+                    handler.ValidateToken(token, this._parameters, out _);
 
-                var idClaim = principal.Claims.FirstOrDefault(c => c.Type == "id");
+                var idClaim =
+                    principal.Claims.FirstOrDefault(c => c.Type == "id");
 
                 return idClaim?.Value;
             }
-            catch (SecurityTokenValidationException)
+            catch(Exception e)
+                when (e is SecurityTokenValidationException or ArgumentException)
             {
+                this._logger.LogError("Invalid token: {@token}", token);
                 return null;
             }
         }
