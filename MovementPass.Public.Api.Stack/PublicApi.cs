@@ -82,8 +82,10 @@
 
             photoBucket.GrantPut(lambda);
 
-            var streamArn = this.GetParameterStoreValue("kinesis/passes-load");
-            var stream = Stream.FromStreamArn(this, "Stream", streamArn);
+            var stream = Stream.FromStreamArn(
+                this,
+                "Stream",
+                $"arn:aws:kinesis:{this.Region}:{this.Account}:stream/passes-load");
 
             var role = new Role(this, "Role",
                 new RoleProps {
