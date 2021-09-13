@@ -1,7 +1,6 @@
 ﻿namespace MovementPass.Public.Api.Controllers
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -13,7 +12,6 @@
 
     using MediatR;
 
-    using Features.Apply;
     using Features.ViewPass;
     using Features.ViewPasses;
 
@@ -26,24 +24,6 @@
         public PassesController(IMediator mediator) =>
             this._mediator = mediator ??
                              throw new ArgumentNullException(nameof(mediator));
-
-        [HttpPost("")]
-        [ProducesResponseType(typeof(IdResult), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(IDictionary<string, IEnumerable<string>>),
-            StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> Apply(
-            [FromBody, BindRequired] ApplyRequest request,
-            CancellationToken cancellationToken)
-        {
-            var result = await this._mediator
-                .Send(request, cancellationToken)
-                .ConfigureAwait(true);
-
-            return this.CreatedAtAction(
-                nameof(this.Get),
-                result,
-                result);
-        }
 
         [HttpGet("")]
         [ResponseCache(Duration = 180, Location = ResponseCacheLocation.Client)]
