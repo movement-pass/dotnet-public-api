@@ -5,14 +5,10 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-
     using Microsoft.Extensions.Options;
-
     using Amazon.DynamoDBv2;
     using Amazon.DynamoDBv2.Model;
-
     using MediatR;
-
     using Entities;
     using ExtensionMethods;
     using Infrastructure;
@@ -64,8 +60,7 @@
                 .GetApplicant(pass.ApplicantId, cancellationToken)
                 .ConfigureAwait(false);
 
-            var detail = new PassDetailItem
-            {
+            var detail = new PassDetailItem {
                 Applicant = new ApplicantItem().Merge(applicant)
             }.Merge(pass);
 
@@ -76,11 +71,9 @@
             string id,
             CancellationToken cancellationToken)
         {
-            var req = new GetItemRequest
-            {
+            var req = new GetItemRequest {
                 TableName = this._tableOptions.Passes,
-                Key = new Dictionary<string, AttributeValue>
-                {
+                Key = new Dictionary<string, AttributeValue> {
                     { "id", new AttributeValue { S = id } }
                 }
             };
@@ -92,10 +85,8 @@
 
             if (!res.Item.Any() ||
                 !res.Item.ContainsKey("applicantId") ||
-                string.Compare(
-                    res.Item["applicantId"].S,
-                    this._currentUserProvider.UserId,
-                    StringComparison.Ordinal) != 0)
+                !string.Equals(res.Item["applicantId"].S,
+                    this._currentUserProvider.UserId, StringComparison.Ordinal))
             {
                 return null;
             }
@@ -107,11 +98,9 @@
             string id,
             CancellationToken cancellationToken)
         {
-            var req = new GetItemRequest
-            {
+            var req = new GetItemRequest {
                 TableName = this._tableOptions.Applicants,
-                Key = new Dictionary<string, AttributeValue>
-                {
+                Key = new Dictionary<string, AttributeValue> {
                     { "id", new AttributeValue { S = id } }
                 }
             };
@@ -121,9 +110,9 @@
                     cancellationToken)
                 .ConfigureAwait(false);
 
-            return res.Item.Any() ?
-                res.Item.FromDynamoDBAttributes<Applicant>() :
-                null;
+            return res.Item.Any()
+                ? res.Item.FromDynamoDBAttributes<Applicant>()
+                : null;
         }
     }
 }
