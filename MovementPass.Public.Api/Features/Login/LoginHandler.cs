@@ -6,14 +6,10 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-
     using Microsoft.Extensions.Options;
-
     using Amazon.DynamoDBv2;
     using Amazon.DynamoDBv2.Model;
-
     using MediatR;
-
     using Entities;
     using ExtensionMethods;
     using Infrastructure;
@@ -55,11 +51,9 @@
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var req = new GetItemRequest
-            {
+            var req = new GetItemRequest {
                 TableName = this._tableOptions.Applicants,
-                Key = new Dictionary<string, AttributeValue>
-                {
+                Key = new Dictionary<string, AttributeValue> {
                     { "id", new AttributeValue { S = request.MobilePhone } }
                 }
             };
@@ -73,11 +67,10 @@
                 ? res.Item.FromDynamoDBAttributes<Applicant>()
                 : null;
 
-            if (applicant == null || string.Compare(
+            if (applicant == null || !string.Equals(
                 applicant.DateOfBirth.ToString(@"ddMMyyyy",
-                    CultureInfo.InvariantCulture),
-                request.DateOfBirth.Trim(),
-                StringComparison.Ordinal) != 0)
+                    CultureInfo.InvariantCulture), request.DateOfBirth.Trim(),
+                StringComparison.Ordinal))
             {
                 return null;
             }
