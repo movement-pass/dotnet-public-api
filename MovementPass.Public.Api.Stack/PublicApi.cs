@@ -91,12 +91,9 @@
 
             photoBucket.GrantPut(lambda);
 
-            var integration = new LambdaProxyIntegration(
-                new LambdaProxyIntegrationProps
-                {
-                    Handler = lambda,
-                    PayloadFormatVersion = PayloadFormatVersion.VERSION_2_0
-                });
+            var integration = new HttpLambdaIntegration("LambdaIntegration", lambda, new HttpLambdaIntegrationProps {
+                PayloadFormatVersion = PayloadFormatVersion.VERSION_2_0
+            });
 
             var api = new HttpApi(this, "Api", new HttpApiProps
             {
