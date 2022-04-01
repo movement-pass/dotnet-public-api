@@ -9,7 +9,7 @@
         <AnalysisLevel>latest</AnalysisLevel>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Amazon.CDK" Version="1.137.0" />
+        <PackageReference Include="Amazon.CDK" Version="1.151.0" />
         <PackageReference Include="Amazon.CDK.AWS.APIGateway" Version="1.137.0" />
         <PackageReference Include="Amazon.CDK.AWS.CertificateManager" Version="1.137.0" />
         <PackageReference Include="Amazon.CDK.AWS.DynamoDB" Version="1.137.0" />
