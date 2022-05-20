@@ -75,20 +75,17 @@
                 return this.NotFound();
             }
 
-            var headers = this.Response?.GetTypedHeaders();
-
-            if (headers != null)
-            {
-                headers.CacheControl =
-                    new CacheControlHeaderValue {
-                        Private = true,
-                        MaxAge =
-                            string.Equals(pass.Status, "APPLIED",
-                                StringComparison.OrdinalIgnoreCase)
-                                ? TimeSpan.FromMinutes(3)
-                                : TimeSpan.FromDays(30)
-                    };
-            }
+            var headers = this.Response.GetTypedHeaders();
+            
+            headers.CacheControl =
+                new CacheControlHeaderValue {
+                    Private = true,
+                    MaxAge =
+                        string.Equals(pass.Status, "APPLIED",
+                            StringComparison.OrdinalIgnoreCase)
+                            ? TimeSpan.FromMinutes(3)
+                            : TimeSpan.FromDays(30)
+                };
 
             return this.Ok(pass);
         }

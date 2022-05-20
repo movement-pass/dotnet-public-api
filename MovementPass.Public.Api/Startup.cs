@@ -6,7 +6,7 @@ namespace MovementPass.Public.Api
     using System.Linq;
     using System.Net.Mime;
     using System.Text.Json;
-
+    using System.Text.Json.Serialization;
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -85,7 +85,7 @@ namespace MovementPass.Public.Api
                 {
                     static void Apply(JsonSerializerOptions settings)
                     {
-                        settings.IgnoreNullValues = true;
+                        settings.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
                         settings.DictionaryKeyPolicy =
                             JsonNamingPolicy.CamelCase;
                     }
@@ -109,7 +109,7 @@ namespace MovementPass.Public.Api
                     {
                         var errors = context.ModelState
                             .SelectMany(ms =>
-                                ms.Value.Errors.Select(e =>
+                                ms.Value?.Errors.Select(e =>
                                     e.Exception?.Message ?? e.ErrorMessage))
                             .ToList();
 
