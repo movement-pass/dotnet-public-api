@@ -16,6 +16,7 @@
     using Features.ViewPass;
     using Features.ViewPasses;
     using Infrastructure;
+    using Microsoft.AspNetCore.Http;
 
     public class PassesControllerTests
     {
@@ -25,7 +26,14 @@
         public PassesControllerTests()
         {
             this._mockedMediator = new Mock<IMediator>();
-            this._controller = new PassesController(this._mockedMediator.Object);
+
+            this._controller = new PassesController(this._mockedMediator.Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
+            };
         }
 
         [Fact]
@@ -72,7 +80,7 @@
                         It.IsAny<ViewPassRequest>(),
                         It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new PassDetailItem());
-
+            
             var result = await this._controller.Get(IdGenerator.Generate(), CancellationToken.None)
                 .ConfigureAwait(false) as OkObjectResult;
 
