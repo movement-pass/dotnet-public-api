@@ -30,7 +30,7 @@
                     FunctionName = name,
                     Handler =
                         "MovementPass.Public.Api::MovementPass.Public.Api.LambdaEntryPoint::FunctionHandlerAsync",
-                    Runtime = Runtime.DOTNET_CORE_3_1,
+                    Runtime = Runtime.DOTNET_6,
                     Timeout = Duration.Seconds(30),
                     MemorySize = 3008,
                     Code = Code.FromAsset($"dist/{name}.zip"),
