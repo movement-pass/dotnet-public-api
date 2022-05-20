@@ -4,6 +4,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
 
     using MediatR;
@@ -16,7 +17,6 @@
     using Features.ViewPass;
     using Features.ViewPasses;
     using Infrastructure;
-    using Microsoft.AspNetCore.Http;
 
     public class PassesControllerTests
     {
