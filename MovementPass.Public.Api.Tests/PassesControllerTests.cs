@@ -4,6 +4,7 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
 
     using MediatR;
@@ -12,6 +13,7 @@
     using Xunit;
 
     using Controllers;
+
     using Features.ViewPass;
     using Features.ViewPasses;
     using Infrastructure;
@@ -24,7 +26,14 @@
         public PassesControllerTests()
         {
             this._mockedMediator = new Mock<IMediator>();
-            this._controller = new PassesController(this._mockedMediator.Object);
+
+            this._controller = new PassesController(this._mockedMediator.Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext()
+                }
+            };
         }
 
         [Fact]
