@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.43" />
-    <PackageReference Include="AWSSDK.S3" Version="3.7.9.11" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.9.20" />
     <PackageReference Include="MediatR" Version="10.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
     <PackageReference Include="Moq" Version="4.18.1" />
