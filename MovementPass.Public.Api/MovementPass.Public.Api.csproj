@@ -23,7 +23,7 @@
     <PackageReference Include="AWSXRayRecorder.Handlers.AspNetCore" Version="2.8.1" />
     <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.9.1" />
     <PackageReference Include="MediatR" Version="10.0.1" />
-    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.8" />
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
