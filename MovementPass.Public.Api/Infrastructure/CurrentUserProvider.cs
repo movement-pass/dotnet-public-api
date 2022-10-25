@@ -1,33 +1,32 @@
-﻿namespace MovementPass.Public.Api.Infrastructure
+﻿namespace MovementPass.Public.Api.Infrastructure;
+
+using System;
+using System.Security.Claims;
+
+using Microsoft.AspNetCore.Http;
+
+public interface ICurrentUserProvider
 {
-    using System;
-    using System.Security.Claims;
+    string UserId { get; }
+}
 
-    using Microsoft.AspNetCore.Http;
+public class CurrentUserProvider : ICurrentUserProvider
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public interface ICurrentUserProvider
+    public CurrentUserProvider(IHttpContextAccessor httpContextAccessor) =>
+        this._httpContextAccessor = httpContextAccessor ??
+                                    throw new ArgumentNullException(
+                                        nameof(httpContextAccessor));
+
+    public string UserId
     {
-        string UserId { get; }
-    }
-
-    public class CurrentUserProvider : ICurrentUserProvider
-    {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public CurrentUserProvider(IHttpContextAccessor httpContextAccessor) =>
-            this._httpContextAccessor = httpContextAccessor ??
-                                        throw new ArgumentNullException(
-                                            nameof(httpContextAccessor));
-
-        public string UserId
+        get
         {
-            get
-            {
-                var id = this._httpContextAccessor.HttpContext.User
-                    .FindFirstValue("id");
+            var id = this._httpContextAccessor.HttpContext?.User
+                .FindFirstValue("id");
 
-                return id;
-            }
+            return id;
         }
     }
 }

@@ -1,55 +1,54 @@
-namespace MovementPass.Public.Api.Features.Register
+namespace MovementPass.Public.Api.Features.Register;
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
+using MediatR;
+
+using Infrastructure;
+
+public class RegisterRequest : IValidatableObject, IRequest<JwtResult>
 {
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
+    [Required, MaxLength(64)]
+    public string Name { get; set; }
 
-    using MediatR;
+    [Required, RegularExpression("^01[3-9]\\d{8}$")]
+    public string MobilePhone { get; set; }
 
-    using Infrastructure;
+    [Required, Range(1001, 1075)]
+    public int District { get; set; }
 
-    public class RegisterRequest : IValidatableObject, IRequest<JwtResult>
+    [Required, Range(10001, 10626)]
+    public int Thana { get; set; }
+
+    [Required, DataType(DataType.Date)]
+    public DateTime DateOfBirth { get; set; }
+
+    [Required, RegularExpression("^F|M|O$")]
+    public string Gender { get; set; }
+
+    [Required, RegularExpression("^NID|DL|PP|BR|EID|SID$")]
+    public string IdType { get; set; }
+
+    [Required, MaxLength(64)]
+    public string IdNumber { get; set; }
+
+    [Required, DataType(DataType.Url)]
+    public string Photo { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(
+        ValidationContext validationContext)
     {
-        [Required, MaxLength(64)]
-        public string Name { get; set; }
+        var diff = Clock.Now().ToUniversalTime() -
+                   this.DateOfBirth.ToUniversalTime();
+        var years = (new DateTime(1, 1, 1) + diff).Year - 1;
 
-        [Required, RegularExpression("^01[3-9]\\d{8}$")]
-        public string MobilePhone { get; set; }
-
-        [Required, Range(1001, 1075)]
-        public int District { get; set; }
-
-        [Required, Range(10001, 10626)]
-        public int Thana { get; set; }
-
-        [Required, DataType(DataType.Date)]
-        public DateTime DateOfBirth { get; set; }
-
-        [Required, RegularExpression("^F|M|O$")]
-        public string Gender { get; set; }
-
-        [Required, RegularExpression("^NID|DL|PP|BR|EID|SID$")]
-        public string IdType { get; set; }
-
-        [Required, MaxLength(64)]
-        public string IdNumber { get; set; }
-
-        [Required, DataType(DataType.Url)]
-        public string Photo { get; set; }
-
-        public IEnumerable<ValidationResult> Validate(
-            ValidationContext validationContext)
+        if (years < 18)
         {
-            var diff = Clock.Now().ToUniversalTime() -
-                       this.DateOfBirth.ToUniversalTime();
-            var years = (new DateTime(1, 1, 1) + diff).Year - 1;
-
-            if (years < 18)
-            {
-                yield return new ValidationResult(
-                    "Age must be 18 or over!",
-                    new[] {nameof(this.DateOfBirth)});
-            }
+            yield return new ValidationResult(
+                "Age must be 18 or over!",
+                new[] {nameof(this.DateOfBirth)});
         }
     }
 }
