@@ -1,11 +1,10 @@
-﻿namespace MovementPass.Public.Api.Infrastructure
+﻿namespace MovementPass.Public.Api.Infrastructure;
+
+using System;
+
+public class PhotoBucketOptions
 {
-    using System;
+    public string Name { get; set; }
 
-    public class PhotoBucketOptions
-    {
-        public string Name { get; set; }
-
-        public TimeSpan UploadExpiration { get; set; }
-    }
+    public TimeSpan UploadExpiration { get; set; }
 }

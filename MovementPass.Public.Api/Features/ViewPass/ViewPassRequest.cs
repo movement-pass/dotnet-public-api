@@ -1,9 +1,8 @@
-﻿namespace MovementPass.Public.Api.Features.ViewPass
-{
-    using MediatR;
+﻿namespace MovementPass.Public.Api.Features.ViewPass;
 
-    public class ViewPassRequest : IRequest<PassDetailItem>
-    {
-        public string Id { get; set; }
-    }
+using MediatR;
+
+public class ViewPassRequest : IRequest<PassDetailItem>
+{
+    public string Id { get; set; }
 }

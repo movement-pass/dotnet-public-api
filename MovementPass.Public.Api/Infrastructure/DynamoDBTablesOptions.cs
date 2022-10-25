@@ -1,9 +1,8 @@
-﻿namespace MovementPass.Public.Api.Infrastructure
-{
-    public class DynamoDBTablesOptions
-    {
-        public string Applicants { get; set; }
+﻿namespace MovementPass.Public.Api.Infrastructure;
 
-        public string Passes { get; set; }
-    }
+public class DynamoDBTablesOptions
+{
+    public string Applicants { get; set; }
+
+    public string Passes { get; set; }
 }
