@@ -1,9 +1,8 @@
-﻿namespace MovementPass.Public.Api.Features.ViewPasses
-{
-    using MediatR;
+﻿namespace MovementPass.Public.Api.Features.ViewPasses;
 
-    public class ViewPassesRequest : IRequest<PassListResult>
-    {
-        public PassListKey StartKey { get; set; }
-    }
+using MediatR;
+
+public class ViewPassesRequest : IRequest<PassListResult>
+{
+    public PassListKey StartKey { get; set; }
 }

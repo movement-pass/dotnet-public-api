@@ -1,9 +1,8 @@
-﻿namespace MovementPass.Public.Api.Features.Register
-{
-    public class PhotoUrlResult
-    {
-        public string Url { get; set; }
+﻿namespace MovementPass.Public.Api.Features.Register;
 
-        public string Filename { get; set; }
-    }
+public class PhotoUrlResult
+{
+    public string Url { get; set; }
+
+    public string Filename { get; set; }
 }

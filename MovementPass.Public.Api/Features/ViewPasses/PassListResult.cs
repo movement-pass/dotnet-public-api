@@ -1,11 +1,10 @@
-﻿namespace MovementPass.Public.Api.Features.ViewPasses
+﻿namespace MovementPass.Public.Api.Features.ViewPasses;
+
+using System.Collections.Generic;
+
+public class PassListResult
 {
-    using System.Collections.Generic;
+    public IEnumerable<PassItem> Passes { get; set; }
 
-    public class PassListResult
-    {
-        public IEnumerable<PassItem> Passes { get; set; }
-
-        public PassListKey NextKey { get; set; }
-    }
+    public PassListKey NextKey { get; set; }
 }

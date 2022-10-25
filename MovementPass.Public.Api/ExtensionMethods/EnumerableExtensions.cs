@@ -1,22 +1,21 @@
-namespace MovementPass.Public.Api.ExtensionMethods
+namespace MovementPass.Public.Api.ExtensionMethods;
+
+using System;
+using System.Collections;
+
+using Infrastructure;
+
+internal static class EnumerableExtensions
 {
-    using System;
-    using System.Collections;
-
-    using Infrastructure;
-
-    internal static class EnumerableExtensions
+    public static IEnumerable Cast(this IEnumerable instance, Type type)
     {
-        public static IEnumerable Cast(this IEnumerable instance, Type type)
+        if (instance == null)
         {
-            if (instance == null)
-            {
-                return null;
-            }
-
-            var caster = EnumerableCaster.Get(type);
-
-            return caster(instance);
+            return null;
         }
+
+        var caster = EnumerableCaster.Get(type);
+
+        return caster(instance);
     }
 }

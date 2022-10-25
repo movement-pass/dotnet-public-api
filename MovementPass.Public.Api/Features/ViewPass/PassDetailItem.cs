@@ -1,7 +1,6 @@
-﻿namespace MovementPass.Public.Api.Features.ViewPass
+﻿namespace MovementPass.Public.Api.Features.ViewPass;
+
+public class PassDetailItem : PassItem
 {
-    public class PassDetailItem : PassItem
-    {
-        public ApplicantItem Applicant { get; set; }
-    }
+    public ApplicantItem Applicant { get; set; }
 }

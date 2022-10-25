@@ -1,7 +1,6 @@
-﻿namespace MovementPass.Public.Api.Features.Apply
+﻿namespace MovementPass.Public.Api.Features.Apply;
+
+public class IdResult
 {
-    public class IdResult
-    {
-        public string Id { get; set; }
-    }
+    public string Id { get; set; }
 }

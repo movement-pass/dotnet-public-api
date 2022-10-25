@@ -1,93 +1,92 @@
-﻿namespace MovementPass.Public.Api.Controllers
+﻿namespace MovementPass.Public.Api.Controllers;
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Net.Http.Headers;
+
+using MediatR;
+
+using Features.Apply;
+using Features.ViewPass;
+using Features.ViewPasses;
+
+[Authorize]
+[Route("[controller]")]
+public class PassesController : ControllerBase
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
+    private readonly IMediator _mediator;
 
-    using Microsoft.AspNetCore.Authorization;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.AspNetCore.Mvc.ModelBinding;
-    using Microsoft.Net.Http.Headers;
+    public PassesController(IMediator mediator) =>
+        this._mediator = mediator ??
+                         throw new ArgumentNullException(nameof(mediator));
 
-    using MediatR;
-
-    using Features.Apply;
-    using Features.ViewPass;
-    using Features.ViewPasses;
-
-    [Authorize]
-    [Route("[controller]")]
-    public class PassesController : ControllerBase
+    [HttpPost("")]
+    [ProducesResponseType(typeof(IdResult), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(IDictionary<string, IEnumerable<string>>),
+        StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> Apply(
+        [FromBody, BindRequired] ApplyRequest request,
+        CancellationToken cancellationToken)
     {
-        private readonly IMediator _mediator;
+        var result = await this._mediator
+            .Send(request, cancellationToken)
+            .ConfigureAwait(true);
 
-        public PassesController(IMediator mediator) =>
-            this._mediator = mediator ??
-                             throw new ArgumentNullException(nameof(mediator));
+        return this.CreatedAtAction(
+            nameof(this.Get),
+            result,
+            result);
+    }
 
-        [HttpPost("")]
-        [ProducesResponseType(typeof(IdResult), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(IDictionary<string, IEnumerable<string>>),
-            StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> Apply(
-            [FromBody, BindRequired] ApplyRequest request,
-            CancellationToken cancellationToken)
+    [HttpGet("")]
+    [ResponseCache(Duration = 180, Location = ResponseCacheLocation.Client)]
+    [ProducesResponseType(typeof(PassListResult), StatusCodes.Status200OK)]
+    public async Task<ActionResult> List([FromQuery] PassListKey startKey,
+        CancellationToken cancellationToken)
+    {
+        var result = await this._mediator
+            .Send(new ViewPassesRequest { StartKey = startKey },
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        return this.Ok(result);
+    }
+
+    [HttpGet("{id:length(32)}")]
+    [ProducesResponseType(typeof(PassDetailItem), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> Get(
+        [FromRoute, BindRequired] string id,
+        CancellationToken cancellationToken)
+    {
+        var pass = await this._mediator
+            .Send(new ViewPassRequest { Id = id }, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (pass == null)
         {
-            var result = await this._mediator
-                .Send(request, cancellationToken)
-                .ConfigureAwait(true);
-
-            return this.CreatedAtAction(
-                nameof(this.Get),
-                result,
-                result);
+            return this.NotFound();
         }
 
-        [HttpGet("")]
-        [ResponseCache(Duration = 180, Location = ResponseCacheLocation.Client)]
-        [ProducesResponseType(typeof(PassListResult), StatusCodes.Status200OK)]
-        public async Task<ActionResult> List([FromQuery] PassListKey startKey,
-            CancellationToken cancellationToken)
-        {
-            var result = await this._mediator
-                .Send(new ViewPassesRequest { StartKey = startKey },
-                    cancellationToken)
-                .ConfigureAwait(false);
-
-            return this.Ok(result);
-        }
-
-        [HttpGet("{id:length(32)}")]
-        [ProducesResponseType(typeof(PassDetailItem), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> Get(
-            [FromRoute, BindRequired] string id,
-            CancellationToken cancellationToken)
-        {
-            var pass = await this._mediator
-                .Send(new ViewPassRequest { Id = id }, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (pass == null)
-            {
-                return this.NotFound();
-            }
-
-            var headers = this.Response.GetTypedHeaders();
+        var headers = this.Response.GetTypedHeaders();
             
-            headers.CacheControl =
-                new CacheControlHeaderValue {
-                    Private = true,
-                    MaxAge =
-                        string.Equals(pass.Status, "APPLIED",
-                            StringComparison.OrdinalIgnoreCase)
-                            ? TimeSpan.FromMinutes(3)
-                            : TimeSpan.FromDays(30)
-                };
+        headers.CacheControl =
+            new CacheControlHeaderValue {
+                Private = true,
+                MaxAge =
+                    string.Equals(pass.Status, "APPLIED",
+                        StringComparison.OrdinalIgnoreCase)
+                        ? TimeSpan.FromMinutes(3)
+                        : TimeSpan.FromDays(30)
+            };
 
-            return this.Ok(pass);
-        }
+        return this.Ok(pass);
     }
 }

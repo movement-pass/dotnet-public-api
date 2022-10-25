@@ -1,81 +1,80 @@
-namespace MovementPass.Public.Api.Controllers
+namespace MovementPass.Public.Api.Controllers;
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+
+using MediatR;
+
+using ExtensionMethods;
+using Features;
+using Features.Login;
+using Features.Register;
+
+[Route("[controller]/[action]")]
+public class IdentityController : ControllerBase
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
+    private readonly IMediator _mediator;
 
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.AspNetCore.Mvc.ModelBinding;
+    public IdentityController(IMediator mediator) =>
+        this._mediator = mediator ??
+                         throw new ArgumentNullException(nameof(mediator));
 
-    using MediatR;
-
-    using ExtensionMethods;
-    using Features;
-    using Features.Login;
-    using Features.Register;
-
-    [Route("[controller]/[action]")]
-    public class IdentityController : ControllerBase
+    [HttpPost]
+    [ProducesResponseType(typeof(JwtResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IDictionary<string, IEnumerable<string>>),
+        StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Login(
+        [FromBody, BindRequired] LoginRequest request,
+        CancellationToken cancellationToken)
     {
-        private readonly IMediator _mediator;
+        var result= await this._mediator
+            .Send(request, cancellationToken)
+            .ConfigureAwait(false);
 
-        public IdentityController(IMediator mediator) =>
-            this._mediator = mediator ??
-                             throw new ArgumentNullException(nameof(mediator));
+        return result == null ?
+            (ActionResult)this.ClientError("Invalid credential!") :
+            this.Ok(result);
+    }
 
-        [HttpPost]
-        [ProducesResponseType(typeof(JwtResult), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(IDictionary<string, IEnumerable<string>>),
-            StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Login(
-            [FromBody, BindRequired] LoginRequest request,
-            CancellationToken cancellationToken)
+    [HttpPost]
+    [ProducesResponseType(typeof(JwtResult), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(IDictionary<string, IEnumerable<string>>),
+        StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Register(
+        [FromBody, BindRequired] RegisterRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await this._mediator
+            .Send(request, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (result == null)
         {
-            var result= await this._mediator
-                .Send(request, cancellationToken)
-                .ConfigureAwait(false);
-
-            return result == null ?
-                (ActionResult)this.ClientError("Invalid credential!") :
-                this.Ok(result);
+            return this.ClientError("Mobile phone is already registered!");
         }
 
-        [HttpPost]
-        [ProducesResponseType(typeof(JwtResult), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(IDictionary<string, IEnumerable<string>>),
-            StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Register(
-            [FromBody, BindRequired] RegisterRequest request,
-            CancellationToken cancellationToken)
+        return new ObjectResult(result)
         {
-            var result = await this._mediator
-                .Send(request, cancellationToken)
-                .ConfigureAwait(false);
+            StatusCode = StatusCodes.Status201Created
+        };
+    }
 
-            if (result == null)
-            {
-                return this.ClientError("Mobile phone is already registered!");
-            }
+    [HttpPost]
+    [ProducesResponseType(typeof(PhotoUrlResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IDictionary<string, IEnumerable<string>>),
+        StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> Photo(PhotoUrlRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await this._mediator.Send(request, cancellationToken)
+            .ConfigureAwait(false);
 
-            return new ObjectResult(result)
-            {
-                StatusCode = StatusCodes.Status201Created
-            };
-        }
-
-        [HttpPost]
-        [ProducesResponseType(typeof(PhotoUrlResult), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(IDictionary<string, IEnumerable<string>>),
-            StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult> Photo(PhotoUrlRequest request,
-            CancellationToken cancellationToken)
-        {
-            var result = await this._mediator.Send(request, cancellationToken)
-                .ConfigureAwait(false);
-
-            return this.Ok(result);
-        }
+        return this.Ok(result);
     }
 }
