@@ -10,8 +10,8 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Amazon.CDK" Version="1.179.0" />
-        <PackageReference Include="Amazon.CDK.AWS.APIGatewayv2" Version="1.178.0" />
-        <PackageReference Include="Amazon.CDK.AWS.APIGatewayv2.Integrations" Version="1.178.0" />
+        <PackageReference Include="Amazon.CDK.AWS.APIGatewayv2" Version="1.179.0" />
+        <PackageReference Include="Amazon.CDK.AWS.APIGatewayv2.Integrations" Version="1.179.0" />
         <PackageReference Include="Amazon.CDK.AWS.CertificateManager" Version="1.179.0" />
         <PackageReference Include="Amazon.CDK.AWS.DynamoDB" Version="1.179.0" />
         <PackageReference Include="Amazon.CDK.AWS.IAM" Version="1.179.0" />
