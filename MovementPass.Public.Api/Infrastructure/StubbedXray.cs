@@ -54,6 +54,10 @@ public sealed class StubbedXray : IAWSXRayRecorder
     {
     }
 
+    public void BeginSubsegmentWithoutSampling(string name)
+    {
+    }
+    
     public void EndSubsegment(DateTime? timestamp = null)
     {
     }
