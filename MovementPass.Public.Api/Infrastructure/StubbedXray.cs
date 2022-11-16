@@ -1,123 +1,126 @@
-namespace MovementPass.Public.Api.Infrastructure
+namespace MovementPass.Public.Api.Infrastructure;
+
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+using Amazon.XRay.Recorder.Core;
+using Amazon.XRay.Recorder.Core.Internal.Context;
+using Amazon.XRay.Recorder.Core.Internal.Emitters;
+using Amazon.XRay.Recorder.Core.Sampling;
+using Amazon.XRay.Recorder.Core.Strategies;
+
+public sealed class StubbedXray : IAWSXRayRecorder
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
+    public string Origin { get; set; }
 
-    using Amazon.XRay.Recorder.Core;
-    using Amazon.XRay.Recorder.Core.Internal.Context;
-    using Amazon.XRay.Recorder.Core.Internal.Emitters;
-    using Amazon.XRay.Recorder.Core.Sampling;
-    using Amazon.XRay.Recorder.Core.Strategies;
+    public ISamplingStrategy SamplingStrategy { get; set; }
 
-    public sealed class StubbedXray : IAWSXRayRecorder
+    public IStreamingStrategy StreamingStrategy { get; set; }
+
+    public ContextMissingStrategy ContextMissingStrategy { get; set; }
+
+    public IDictionary<string, object> RuntimeContext { get; } =
+        new Dictionary<string, object>();
+
+    public ExceptionSerializationStrategy ExceptionSerializationStrategy
     {
-        public string Origin { get; set; }
+        get;
+        set;
+    }
 
-        public ISamplingStrategy SamplingStrategy { get; set; }
+    public ITraceContext TraceContext { get; set; }
 
-        public IStreamingStrategy StreamingStrategy { get; set; }
+    public ISegmentEmitter Emitter { get; set; }
 
-        public ContextMissingStrategy ContextMissingStrategy { get; set; }
+    public void Dispose()
+    {
+    }
 
-        public IDictionary<string, object> RuntimeContext { get; } =
-            new Dictionary<string, object>();
+    public void BeginSegment(
+        string name,
+        string traceId = null,
+        string parentId = null,
+        SamplingResponse samplingResponse = null,
+        DateTime? timestamp = null)
+    {
+    }
 
-        public ExceptionSerializationStrategy ExceptionSerializationStrategy
-        {
-            get;
-            set;
-        }
+    public void EndSegment(DateTime? timestamp = null)
+    {
+    }
 
-        public ITraceContext TraceContext { get; set; }
+    public void BeginSubsegment(string name, DateTime? timestamp = null)
+    {
+    }
 
-        public ISegmentEmitter Emitter { get; set; }
+    public void BeginSubsegmentWithoutSampling(string name)
+    {
+    }
+    
+    public void EndSubsegment(DateTime? timestamp = null)
+    {
+    }
 
-        public void Dispose()
-        {
-        }
+    public void SetNamespace(string value)
+    {
+    }
 
-        public void BeginSegment(
-            string name,
-            string traceId = null,
-            string parentId = null,
-            SamplingResponse samplingResponse = null,
-            DateTime? timestamp = null)
-        {
-        }
+    public void AddAnnotation(string key, object value)
+    {
+    }
 
-        public void EndSegment(DateTime? timestamp = null)
-        {
-        }
+    public void MarkFault()
+    {
+    }
 
-        public void BeginSubsegment(string name, DateTime? timestamp = null)
-        {
-        }
+    public void MarkError()
+    {
+    }
 
-        public void EndSubsegment(DateTime? timestamp = null)
-        {
-        }
+    public void AddException(Exception ex)
+    {
+    }
 
-        public void SetNamespace(string value)
-        {
-        }
+    public TResult
+        TraceMethod<TResult>(string name, Func<TResult> method) => default;
 
-        public void AddAnnotation(string key, object value)
-        {
-        }
+    public void TraceMethod(string name, Action method)
+    {
+    }
 
-        public void MarkFault()
-        {
-        }
+    public Task<TResult> TraceMethodAsync<TResult>(string name,
+        Func<Task<TResult>> method) =>
+        Task.FromResult(default(TResult));
 
-        public void MarkError()
-        {
-        }
+    public Task TraceMethodAsync(string name, Func<Task> method) =>
+        Task.CompletedTask;
 
-        public void AddException(Exception ex)
-        {
-        }
+    public void AddHttpInformation(string key, object value)
+    {
+    }
 
-        public TResult
-            TraceMethod<TResult>(string name, Func<TResult> method) => default;
+    public void MarkThrottle()
+    {
+    }
 
-        public void TraceMethod(string name, Action method)
-        {
-        }
+    public void AddPrecursorId(string precursorId)
+    {
+    }
 
-        public Task<TResult> TraceMethodAsync<TResult>(string name,
-            Func<Task<TResult>> method) =>
-            Task.FromResult(default(TResult));
+    public void AddSqlInformation(string key, string value)
+    {
+    }
 
-        public Task TraceMethodAsync(string name, Func<Task> method) =>
-            Task.CompletedTask;
+    public void AddMetadata(string key, object value)
+    {
+    }
 
-        public void AddHttpInformation(string key, object value)
-        {
-        }
+    public void AddMetadata(string nameSpace, string key, object value)
+    {
+    }
 
-        public void MarkThrottle()
-        {
-        }
-
-        public void AddPrecursorId(string precursorId)
-        {
-        }
-
-        public void AddSqlInformation(string key, string value)
-        {
-        }
-
-        public void AddMetadata(string key, object value)
-        {
-        }
-
-        public void AddMetadata(string nameSpace, string key, object value)
-        {
-        }
-
-        public void SetDaemonAddress(string daemonAddress)
-        {
-        }
+    public void SetDaemonAddress(string daemonAddress)
+    {
     }
 }
