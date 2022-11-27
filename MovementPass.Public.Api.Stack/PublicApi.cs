@@ -2,9 +2,10 @@
 
 using System.Collections.Generic;
 
+using Constructs;
 using Amazon.CDK;
-using Amazon.CDK.AWS.APIGatewayv2;
-using Amazon.CDK.AWS.APIGatewayv2.Integrations;
+using Amazon.CDK.AWS.Apigatewayv2.Alpha;
+using Amazon.CDK.AWS.Apigatewayv2.Integrations.Alpha;
 using Amazon.CDK.AWS.CertificateManager;
 using Amazon.CDK.AWS.CloudWatch;
 using Amazon.CDK.AWS.DynamoDB;
