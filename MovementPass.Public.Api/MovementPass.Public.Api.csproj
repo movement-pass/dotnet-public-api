@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
@@ -18,7 +18,7 @@
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.102.21" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.5" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.103.44" />
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.104.10" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.7.104.25" />
     <PackageReference Include="AWSXRayRecorder.Core" Version="2.14.0" />
     <PackageReference Include="AWSXRayRecorder.Handlers.AspNetCore" Version="2.11.0" />
     <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.12.0" />
