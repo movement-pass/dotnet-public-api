@@ -159,7 +159,7 @@ public class Startup
         services.AddLogging(options => options.AddLambdaLogger(
             this.Configuration, "logging"));
 
-        services.AddMediatR(this.GetType().Assembly);
+        services.AddMediatR(options => options.RegisterServicesFromAssembly(this.GetType().Assembly));
 
         this.Configuration.Apply<DynamoDBTablesOptions>(services);
         this.Configuration.Apply<PhotoBucketOptions>(services);
