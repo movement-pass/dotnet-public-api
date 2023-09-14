@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
-using Moq;
+using NSubstitute;
 using Xunit;
 
 using Features.ViewPass;
@@ -18,8 +18,8 @@ using Infrastructure;
 
 public class ViewPassHandlerTests
 {
-    private readonly Mock<IAmazonDynamoDB> _mockedDynamoDB;
-    private readonly Mock<ICurrentUserProvider> _mockedCurrentUserProvider;
+    private readonly IAmazonDynamoDB _mockedDynamoDB;
+    private readonly ICurrentUserProvider _mockedCurrentUserProvider;
     private readonly DynamoDBTablesOptions _tablesOptions;
 
     private readonly ViewPassHandler _handler;
@@ -32,12 +32,12 @@ public class ViewPassHandlerTests
             Passes = "passes"
         };
 
-        this._mockedDynamoDB = new Mock<IAmazonDynamoDB>();
-        this._mockedCurrentUserProvider = new Mock<ICurrentUserProvider>();
+        this._mockedDynamoDB = Substitute.For<IAmazonDynamoDB>();
+        this._mockedCurrentUserProvider = Substitute.For<ICurrentUserProvider>();
 
         this._handler = new ViewPassHandler(
-            this._mockedDynamoDB.Object,
-            this._mockedCurrentUserProvider.Object,
+            this._mockedDynamoDB,
+            this._mockedCurrentUserProvider,
             new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions));
     }
 
@@ -46,22 +46,22 @@ public class ViewPassHandlerTests
         Assert.Throws<ArgumentNullException>(() =>
             new ViewPassHandler(
                 null,
-                this._mockedCurrentUserProvider.Object,
+                this._mockedCurrentUserProvider,
                 new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions)));
 
     [Fact]
     public void Constructor_throws_on_null_CurrentUserProvider() =>
         Assert.Throws<ArgumentNullException>(() =>
             new ViewPassHandler(
-                this._mockedDynamoDB.Object, 
+                this._mockedDynamoDB, 
                 null,
                 new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions)));
     [Fact]
     public void Constructor_throws_on_null_DynamoDBTablesOptions() =>
         Assert.Throws<ArgumentNullException>(() =>
             new ViewPassHandler(
-                this._mockedDynamoDB.Object, 
-                this._mockedCurrentUserProvider.Object,
+                this._mockedDynamoDB, 
+                this._mockedCurrentUserProvider,
                 null));
     [Fact]
     public async Task Handle_returns_matching_pass()
@@ -69,12 +69,10 @@ public class ViewPassHandlerTests
         var id = IdGenerator.Generate();
         var userId = IdGenerator.Generate();
 
-        this._mockedCurrentUserProvider.Setup(cup => cup.UserId).Returns(userId);
+        this._mockedCurrentUserProvider.UserId.Returns(userId);
 
-        this._mockedDynamoDB.SetupSequence(ddb =>
-                ddb.GetItemAsync(
-                    It.IsAny<GetItemRequest>(),
-                    It.IsAny<CancellationToken>()))
+        this._mockedDynamoDB
+            .GetItemAsync(Arg.Any<GetItemRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new GetItemResponse
             {
                 Item = new Dictionary<string, AttributeValue>
@@ -82,15 +80,14 @@ public class ViewPassHandlerTests
                     { "id", new AttributeValue { S = id } },
                     { "applicantId", new AttributeValue { S = userId } }
                 }
-            }))
-            .Returns(Task.FromResult(new GetItemResponse
+            }), Task.FromResult(new GetItemResponse
             {
                 Item = new Dictionary<string, AttributeValue>
                 {
                     { "id", new AttributeValue { S = userId } }
-                }
+                } 
             }));
-
+        
         var pass = await this._handler.Handle(new ViewPassRequest { Id = id }, CancellationToken.None)
             .ConfigureAwait(false);
 
@@ -103,18 +100,14 @@ public class ViewPassHandlerTests
     [Fact]
     public async Task Handle_returns_null_on_nonexistent_pass()
     {
-        this._mockedCurrentUserProvider.Setup(cup => cup.UserId)
-            .Returns(IdGenerator.Generate);
+        this._mockedCurrentUserProvider.UserId.Returns(IdGenerator.Generate());
 
-        this._mockedDynamoDB.Setup(ddb =>
-                ddb.GetItemAsync(
-                    It.IsAny<GetItemRequest>(),
-                    It.IsAny<CancellationToken>()))
+        this._mockedDynamoDB.GetItemAsync(Arg.Any<GetItemRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new GetItemResponse
             {
                 Item = new Dictionary<string, AttributeValue>()
             }));
-
+        
         var res = await this._handler
             .Handle(new ViewPassRequest { Id = IdGenerator.Generate() }, CancellationToken.None)
             .ConfigureAwait(false);

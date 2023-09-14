@@ -13,7 +13,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Util;
 
-using Moq;
+using NSubstitute;
 using Xunit;
 
 using Features.Login;
@@ -24,7 +24,7 @@ public class LoginHandlerTests
     private const string MobilePhone = "01512345678";
     private static readonly DateTime DateOfBirth = new DateTime(1971, 12, 16);
 
-    private readonly Mock<IAmazonDynamoDB> _mockedDynamoDB;
+    private readonly IAmazonDynamoDB _mockedDynamoDB;
     private readonly DynamoDBTablesOptions _tablesOptions;
     private readonly JwtOptions _jwtOptions;
 
@@ -46,10 +46,10 @@ public class LoginHandlerTests
             Expiration = TimeSpan.Parse("00:01:00:00")
         };
 
-        this._mockedDynamoDB = new Mock<IAmazonDynamoDB>();
+        this._mockedDynamoDB = Substitute.For<IAmazonDynamoDB>();
 
         this._handler = new LoginHandler(
-            this._mockedDynamoDB.Object,
+            this._mockedDynamoDB,
             new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions),
             new OptionsWrapper<JwtOptions>(this._jwtOptions));
     }
@@ -66,7 +66,7 @@ public class LoginHandlerTests
     public void Constructor_throws_on_null_DynamoDBTablesOptions() =>
         Assert.Throws<ArgumentNullException>(() =>
             new LoginHandler(
-                this._mockedDynamoDB.Object,
+                this._mockedDynamoDB,
                 null,
                 new OptionsWrapper<JwtOptions>(this._jwtOptions)));
 
@@ -74,18 +74,16 @@ public class LoginHandlerTests
     public void Constructor_throws_on_null_JwtOptions() =>
         Assert.Throws<ArgumentNullException>(() =>
             new LoginHandler(
-                this._mockedDynamoDB.Object,
+                this._mockedDynamoDB,
                 new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions),
                 null));
 
     [Fact]
     public async Task Handle_returns_jwt_result()
     {
-        this._mockedDynamoDB.Setup(ddb =>
-                ddb.GetItemAsync(
-                    It.IsAny<GetItemRequest>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new GetItemResponse
+        this._mockedDynamoDB
+            .GetItemAsync(Arg.Any<GetItemRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new GetItemResponse
             {
                 Item = new Dictionary<string, AttributeValue>
                 {
@@ -106,8 +104,8 @@ public class LoginHandlerTests
                         }
                     }
                 }
-            });
-
+            }));
+        
         var result = await this._handler.Handle(new LoginRequest
             {
                 MobilePhone = MobilePhone,
@@ -121,15 +119,13 @@ public class LoginHandlerTests
     [Fact]
     public async Task Handle_returns_null_for_nonexistent_applicant()
     {
-        this._mockedDynamoDB.Setup(ddb =>
-                ddb.GetItemAsync(
-                    It.IsAny<GetItemRequest>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new GetItemResponse
+        this._mockedDynamoDB
+            .GetItemAsync(Arg.Any<GetItemRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new GetItemResponse
             {
                 Item = new Dictionary<string, AttributeValue>()
-            });
-
+            }));
+        
         var result= await this._handler.Handle(new LoginRequest
             {
                 MobilePhone = MobilePhone
@@ -142,11 +138,9 @@ public class LoginHandlerTests
     [Fact]
     public async Task Handle_returns_null_for_invalid_credentials()
     {
-        this._mockedDynamoDB.Setup(ddb =>
-                ddb.GetItemAsync(
-                    It.IsAny<GetItemRequest>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new GetItemResponse
+        this._mockedDynamoDB
+            .GetItemAsync(Arg.Any<GetItemRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new GetItemResponse
             {
                 Item = new Dictionary<string, AttributeValue>
                 {
@@ -156,8 +150,8 @@ public class LoginHandlerTests
                         S = DateOfBirth.ToString(AWSSDKUtils.ISO8601DateFormat, CultureInfo.InvariantCulture)
                     } }
                 }
-            });
-
+            }));
+        
         var result = await this._handler.Handle(new LoginRequest
             {
                 MobilePhone = MobilePhone,
