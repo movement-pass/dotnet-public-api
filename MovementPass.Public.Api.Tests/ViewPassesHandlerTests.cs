@@ -12,7 +12,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Util;
 
-using Moq;
+using NSubstitute;
 using Xunit;
 
 using Features.ViewPasses;
@@ -20,8 +20,8 @@ using Infrastructure;
 
 public class ViewPassesHandlerTests
 {
-    private readonly Mock<IAmazonDynamoDB> _mockedDynamoDB;
-    private readonly Mock<ICurrentUserProvider> _mockedCurrentUserProvider;
+    private readonly IAmazonDynamoDB _mockedDynamoDB;
+    private readonly ICurrentUserProvider _mockedCurrentUserProvider;
     private readonly DynamoDBTablesOptions _tablesOptions;
 
     private readonly ViewPassesHandler _handler;
@@ -34,12 +34,12 @@ public class ViewPassesHandlerTests
             Passes = "passes"
         };
 
-        this._mockedDynamoDB = new Mock<IAmazonDynamoDB>();
-        this._mockedCurrentUserProvider = new Mock<ICurrentUserProvider>();
+        this._mockedDynamoDB = Substitute.For<IAmazonDynamoDB>();
+        this._mockedCurrentUserProvider = Substitute.For<ICurrentUserProvider>();
 
         this._handler = new ViewPassesHandler(
-            this._mockedDynamoDB.Object,
-            this._mockedCurrentUserProvider.Object,
+            this._mockedDynamoDB,
+            this._mockedCurrentUserProvider,
             new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions));
     }
 
@@ -48,14 +48,14 @@ public class ViewPassesHandlerTests
         Assert.Throws<ArgumentNullException>(() =>
             new ViewPassesHandler(
                 null,
-                this._mockedCurrentUserProvider.Object,
+                this._mockedCurrentUserProvider,
                 new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions)));
 
     [Fact]
     public void Constructor_throws_on_null_CurrentUserProvider() =>
         Assert.Throws<ArgumentNullException>(() =>
             new ViewPassesHandler(
-                this._mockedDynamoDB.Object, 
+                this._mockedDynamoDB, 
                 null,
                 new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions)));
 
@@ -63,8 +63,8 @@ public class ViewPassesHandlerTests
     public void Constructor_throws_on_null_DynamoDBTablesOptions() =>
         Assert.Throws<ArgumentNullException>(() =>
             new ViewPassesHandler(
-                this._mockedDynamoDB.Object, 
-                this._mockedCurrentUserProvider.Object,
+                this._mockedDynamoDB, 
+                this._mockedCurrentUserProvider,
                 null));
 
     [Fact]
@@ -72,39 +72,39 @@ public class ViewPassesHandlerTests
     {
         var userId = IdGenerator.Generate();
 
-        this._mockedCurrentUserProvider.Setup(cup => cup.UserId)
-            .Returns(userId);
-
+        this._mockedCurrentUserProvider.UserId.Returns(userId);
         QueryRequest req = null;
 
-        this._mockedDynamoDB.Setup(ddb =>
-                ddb.QueryAsync(
-                    It.IsAny<QueryRequest>(),
-                    It.IsAny<CancellationToken>()))
-            .Callback<QueryRequest, CancellationToken>((r, _) => req = r)
-            .Returns(Task.FromResult(new QueryResponse
+        this._mockedDynamoDB
+            .QueryAsync(Arg.Any<QueryRequest>(), Arg.Any<CancellationToken>())
+            .ReturnsForAnyArgs(x =>
             {
-                Items = new List<Dictionary<string, AttributeValue>>
+                req = x.Arg<QueryRequest>();
+
+                return Task.FromResult(new QueryResponse
                 {
-                    new Dictionary<string, AttributeValue>
+                    Items = new List<Dictionary<string, AttributeValue>>
                     {
-                        { "id", new AttributeValue { S = IdGenerator.Generate() } }
-                    }
-                },
-                LastEvaluatedKey = new Dictionary<string, AttributeValue>
-                {
-                    { "id", new AttributeValue { S = IdGenerator.Generate() } },
-                    { "userId", new AttributeValue { S = userId } },
-                    {
-                        "endAt",
-                        new AttributeValue
+                        new Dictionary<string, AttributeValue>
                         {
-                            S = Clock.Now().AddDays(1)
-                                .ToString(AWSSDKUtils.ISO8601DateFormat, CultureInfo.InvariantCulture)
+                            { "id", new AttributeValue { S = IdGenerator.Generate() } }
+                        }
+                    },
+                    LastEvaluatedKey = new Dictionary<string, AttributeValue>
+                    {
+                        { "id", new AttributeValue { S = IdGenerator.Generate() } },
+                        { "userId", new AttributeValue { S = userId } },
+                        {
+                            "endAt",
+                            new AttributeValue
+                            {
+                                S = Clock.Now().AddDays(1)
+                                    .ToString(AWSSDKUtils.ISO8601DateFormat, CultureInfo.InvariantCulture)
+                            }
                         }
                     }
-                }
-            }));
+                });
+            });
 
         var result = await this._handler.Handle(new ViewPassesRequest
             {
