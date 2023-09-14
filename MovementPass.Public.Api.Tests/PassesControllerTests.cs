@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using MediatR;
 
-using Moq;
+using NSubstitute;
 using Xunit;
 
 using Controllers;
@@ -20,14 +20,14 @@ using Infrastructure;
 
 public class PassesControllerTests
 {
-    private readonly Mock<IMediator> _mockedMediator;
+    private readonly IMediator _mockedMediator;
     private readonly PassesController _controller;
 
     public PassesControllerTests()
     {
-        this._mockedMediator = new Mock<IMediator>();
+        this._mockedMediator = Substitute.For<IMediator>();
 
-        this._controller = new PassesController(this._mockedMediator.Object)
+        this._controller = new PassesController(this._mockedMediator)
         {
             ControllerContext = new ControllerContext
             {
@@ -43,12 +43,12 @@ public class PassesControllerTests
     [Fact]
     public async Task Apply_successes_on_valid_input()
     {
-        this._mockedMediator.Setup(
-                m => m.Send(
-                    It.IsAny<ApplyRequest>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new IdResult { Id = IdGenerator.Generate() });
-
+        this._mockedMediator.Send(Arg.Any<ApplyRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new IdResult
+            {
+                Id = IdGenerator.Generate()
+            }));
+        
         var result = await this._controller.Apply(new ApplyRequest(), CancellationToken.None)
             .ConfigureAwait(false) as CreatedAtActionResult;
 
@@ -59,12 +59,9 @@ public class PassesControllerTests
     [Fact]
     public async Task List_returns_matching_passes()
     {
-        this._mockedMediator.Setup(
-                m => m.Send(
-                    It.IsAny<ViewPassesRequest>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PassListResult());
-
+        this._mockedMediator.Send(Arg.Any<ViewPassesRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new PassListResult()));
+        
         var result = await this._controller.List(new PassListKey(), CancellationToken.None)
             .ConfigureAwait(false) as OkObjectResult;
 
@@ -75,12 +72,9 @@ public class PassesControllerTests
     [Fact]
     public async Task Get_returns_matching_pass()
     {
-        this._mockedMediator.Setup(
-                m => m.Send(
-                    It.IsAny<ViewPassRequest>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PassDetailItem());
-            
+        this._mockedMediator.Send(Arg.Any<ViewPassRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new PassDetailItem()));
+        
         var result = await this._controller.Get(IdGenerator.Generate(), CancellationToken.None)
             .ConfigureAwait(false) as OkObjectResult;
 
@@ -91,12 +85,9 @@ public class PassesControllerTests
     [Fact]
     public async Task Get_returns_not_found_if_pass_does_not_exist()
     {
-        this._mockedMediator.Setup(
-                m => m.Send(
-                    It.IsAny<ViewPassRequest>(),
-                    It.IsAny<CancellationToken>()))
-            .ReturnsAsync((PassDetailItem)null);
-
+        this._mockedMediator.Send(Arg.Any<ViewPassRequest>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<PassDetailItem>(null));
+        
         var result = await this._controller.Get(IdGenerator.Generate(), CancellationToken.None)
             .ConfigureAwait(false) as NotFoundResult;
 

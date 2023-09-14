@@ -11,7 +11,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Util;
 
-using Moq;
+using NSubstitute;
 using Xunit;
 
 using Features.Apply;
@@ -19,8 +19,8 @@ using Infrastructure;
 
 public class ApplyHandlerTests
 {
-    private readonly Mock<IAmazonDynamoDB> _mockedDynamoDB;
-    private readonly Mock<ICurrentUserProvider> _mockedCurrentUserProvider;
+    private readonly IAmazonDynamoDB _mockedDynamoDB;
+    private readonly ICurrentUserProvider _mockedCurrentUserProvider;
     private readonly DynamoDBTablesOptions _tablesOptions;
 
     private readonly ApplyHandler _handler;
@@ -33,12 +33,12 @@ public class ApplyHandlerTests
             Passes = "passes"
         };
 
-        this._mockedDynamoDB = new Mock<IAmazonDynamoDB>();
-        this._mockedCurrentUserProvider = new Mock<ICurrentUserProvider>();
+        this._mockedDynamoDB = Substitute.For<IAmazonDynamoDB>();
+        this._mockedCurrentUserProvider = Substitute.For<ICurrentUserProvider>();
 
         this._handler = new ApplyHandler(
-            this._mockedDynamoDB.Object,
-            this._mockedCurrentUserProvider.Object,
+            this._mockedDynamoDB,
+            this._mockedCurrentUserProvider,
             new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions));
     }
 
@@ -47,14 +47,14 @@ public class ApplyHandlerTests
         Assert.Throws<ArgumentNullException>(() =>
             new ApplyHandler(
                 null,
-                this._mockedCurrentUserProvider.Object,
+                this._mockedCurrentUserProvider,
                 new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions)));
 
     [Fact]
     public void Constructor_throws_on_null_CurrentUserProvider() =>
         Assert.Throws<ArgumentNullException>(() =>
             new ApplyHandler(
-                this._mockedDynamoDB.Object,
+                this._mockedDynamoDB,
                 null,
                 new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions)));
 
@@ -62,8 +62,8 @@ public class ApplyHandlerTests
     public void Constructor_throws_on_null_DynamoDBTablesOptions() =>
         Assert.Throws<ArgumentNullException>(() =>
             new ApplyHandler(
-                this._mockedDynamoDB.Object,
-                this._mockedCurrentUserProvider.Object,
+                this._mockedDynamoDB,
+                this._mockedCurrentUserProvider,
                 null));
 
     [Theory]
@@ -75,16 +75,18 @@ public class ApplyHandlerTests
     {
         var userId = IdGenerator.Generate();
 
-        this._mockedCurrentUserProvider.Setup(cup => cup.UserId).Returns(userId);
+        this._mockedCurrentUserProvider.UserId.Returns(userId);
 
         TransactWriteItemsRequest req = null;
-
-        this._mockedDynamoDB.Setup(ddb =>
-                ddb.TransactWriteItemsAsync(
-                    It.IsAny<TransactWriteItemsRequest>(),
-                    It.IsAny<CancellationToken>()))
-            .Callback<TransactWriteItemsRequest, CancellationToken>((r, _) => req = r)
-            .ReturnsAsync(new TransactWriteItemsResponse());
+        
+        this._mockedDynamoDB.TransactWriteItemsAsync(
+                Arg.Any<TransactWriteItemsRequest>(),
+                Arg.Any<CancellationToken>())
+            .ReturnsForAnyArgs(x =>
+            {
+                req = x.Arg<TransactWriteItemsRequest>();
+                return Task.FromResult(new TransactWriteItemsResponse());
+            });
 
         var input = new ApplyRequest
         {
