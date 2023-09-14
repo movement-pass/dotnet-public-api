@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 using Amazon.S3;
 using Amazon.S3.Model;
 
-using Moq;
+using NSubstitute;
 using Xunit;
 
 using Features.Register;
@@ -17,7 +17,7 @@ using Infrastructure;
 
 public class PhotoUrlHandlerTests
 {
-    private readonly Mock<IAmazonS3> _mockedS3;
+    private readonly IAmazonS3 _mockedS3;
 
     private readonly PhotoUrlHandler _handler;
 
@@ -29,20 +29,20 @@ public class PhotoUrlHandlerTests
             UploadExpiration = TimeSpan.FromMinutes(5)
         };
 
-        this._mockedS3 = new Mock<IAmazonS3>();
-        this._handler = new PhotoUrlHandler(this._mockedS3.Object,
+        this._mockedS3 = Substitute.For<IAmazonS3>();
+        this._handler = new PhotoUrlHandler(this._mockedS3,
             new OptionsWrapper<PhotoBucketOptions>(photoBucketOptions));
     }
 
     [Fact]
     public void Constructor_throws_on_null_S3() =>
         Assert.Throws<ArgumentNullException>(() =>
-            new PhotoUrlHandler(null, new Mock<IOptions<PhotoBucketOptions>>().Object));
+            new PhotoUrlHandler(null, Substitute.For<IOptions<PhotoBucketOptions>>()));
 
     [Fact]
     public void Constructor_throws_on_null_PhotoBucketOptions() =>
         Assert.Throws<ArgumentNullException>(() =>
-            new PhotoUrlHandler(this._mockedS3.Object, null));
+            new PhotoUrlHandler(this._mockedS3, null));
 
     [Fact]
     public async Task Handle_returns_valid_result()
@@ -50,8 +50,7 @@ public class PhotoUrlHandlerTests
         const string filename = "4712362b634b4374a95d01a743878558.png";
         const string photoUrl = "https://s3.ap-south-1.amazonaws.com/photos.movement-pass.com/" + filename;
 
-        this._mockedS3.Setup(s3 => s3.GetPreSignedURL(It.IsAny<GetPreSignedUrlRequest>()))
-            .Returns(photoUrl);
+        this._mockedS3.GetPreSignedURL(Arg.Any<GetPreSignedUrlRequest>()).Returns(photoUrl);
 
         var result = await this._handler
             .Handle(new PhotoUrlRequest

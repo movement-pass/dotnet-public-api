@@ -102,7 +102,7 @@ public sealed class PublicApi : BaseStack
         var api = new RestApi(this, "Api",
             new RestApiProps {
                 RestApiName = name,
-                MinimumCompressionSize = 1024,
+                MinCompressionSize = Size.Bytes(1024),
                 EndpointTypes = new[] { EndpointType.REGIONAL },
                 DefaultCorsPreflightOptions = new CorsOptions {
                     AllowOrigins = new[] { "*" },

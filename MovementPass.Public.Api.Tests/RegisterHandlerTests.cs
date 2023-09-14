@@ -12,7 +12,8 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 using Amazon.Util;
 
-using Moq;
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 using Features.Register;
@@ -22,7 +23,7 @@ public class RegisterHandlerTests
 {
     private const string MobilePhone = "01512345678";
 
-    private readonly Mock<IAmazonDynamoDB> _mockedDynamoDB;
+    private readonly IAmazonDynamoDB _mockedDynamoDB;
     private readonly DynamoDBTablesOptions _tablesOptions;
     private readonly JwtOptions _jwtOptions;
 
@@ -44,10 +45,10 @@ public class RegisterHandlerTests
             Expiration = TimeSpan.Parse("00:01:00:00")
         };
 
-        this._mockedDynamoDB = new Mock<IAmazonDynamoDB>();
+        this._mockedDynamoDB = Substitute.For<IAmazonDynamoDB>();
 
         this._handler = new RegisterHandler(
-            this._mockedDynamoDB.Object,
+            this._mockedDynamoDB,
             new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions),
             new OptionsWrapper<JwtOptions>(this._jwtOptions));
     }
@@ -64,7 +65,7 @@ public class RegisterHandlerTests
     public void Constructor_throws_on_null_DynamoDBTablesOptions() =>
         Assert.Throws<ArgumentNullException>(() =>
             new RegisterHandler(
-                this._mockedDynamoDB.Object,
+                this._mockedDynamoDB,
                 null,
                 new OptionsWrapper<JwtOptions>(this._jwtOptions)));
 
@@ -72,7 +73,7 @@ public class RegisterHandlerTests
     public void Constructor_throws_on_null_JwtOptions() =>
         Assert.Throws<ArgumentNullException>(() =>
             new RegisterHandler(
-                this._mockedDynamoDB.Object,
+                this._mockedDynamoDB,
                 new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions),
                 null));
 
@@ -80,14 +81,17 @@ public class RegisterHandlerTests
     public async Task Handle_returns_jwt_result()
     {
         PutItemRequest req = null;
-
-        this._mockedDynamoDB.Setup(ddb =>
-                ddb.PutItemAsync(
-                    It.IsAny<PutItemRequest>(),
-                    It.IsAny<CancellationToken>()))
-            .Callback<PutItemRequest, CancellationToken>((r, _) => req = r)
-            .ReturnsAsync(new PutItemResponse());
-
+        
+        this._mockedDynamoDB.PutItemAsync(
+                Arg.Any<PutItemRequest>(),
+                Arg.Any<CancellationToken>())
+            .ReturnsForAnyArgs(x =>
+            {
+                req = x.Arg<PutItemRequest>();
+                
+                return Task.FromResult(new PutItemResponse());
+            });
+        
         var input = new RegisterRequest
         {
             Name = "An Applicant",
@@ -125,12 +129,11 @@ public class RegisterHandlerTests
     [Fact]
     public async Task Handle_returns_null_when_applicant_already_exists()
     {
-        this._mockedDynamoDB.Setup(ddb =>
-                ddb.PutItemAsync(
-                    It.IsAny<PutItemRequest>(),
-                    It.IsAny<CancellationToken>()))
+        this._mockedDynamoDB.PutItemAsync(
+                Arg.Any<PutItemRequest>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new ConditionalCheckFailedException("Failed"));
-
+        
         var applicant = await this._handler.Handle(new RegisterRequest(), CancellationToken.None)
             .ConfigureAwait(false);
 
