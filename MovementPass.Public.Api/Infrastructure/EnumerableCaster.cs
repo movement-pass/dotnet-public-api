@@ -9,9 +9,7 @@ using System.Linq.Expressions;
 public static class EnumerableCaster
 {
     private static readonly ConcurrentDictionary<RuntimeTypeHandle,
-        Func<IEnumerable, IEnumerable>> Cache =
-        new ConcurrentDictionary<RuntimeTypeHandle,
-            Func<IEnumerable, IEnumerable>>();
+        Func<IEnumerable, IEnumerable>> Cache = new();
 
     public static Func<IEnumerable, IEnumerable> Get(Type type)
     {

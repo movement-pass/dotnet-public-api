@@ -57,8 +57,7 @@ public class PhotoUrlHandlerTests
             {
                 ContentType = "image/png",
                 Filename = "my_photo.png"
-            }, CancellationToken.None)
-            .ConfigureAwait(false);
+            }, CancellationToken.None);
 
         Assert.NotNull(result);
     }

@@ -19,5 +19,5 @@ public class JwtOptions
         new SymmetricSecurityKey(Encoding.UTF8.GetBytes(this.Secret));
 
     public SigningCredentials Credentials() =>
-        new SigningCredentials(this.Key(), SecurityAlgorithms.HmacSha256);
+        new(this.Key(), SecurityAlgorithms.HmacSha256);
 }

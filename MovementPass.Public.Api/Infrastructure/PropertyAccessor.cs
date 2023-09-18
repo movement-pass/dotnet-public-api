@@ -9,15 +9,11 @@ public static class PropertyAccessor
 {
     private static readonly
         ConcurrentDictionary<(RuntimeTypeHandle, string),
-            Func<object, object>> GetterCache =
-            new ConcurrentDictionary<(RuntimeTypeHandle, string),
-                Func<object, object>>();
+            Func<object, object>> GetterCache = new();
 
     private static readonly
         ConcurrentDictionary<(RuntimeTypeHandle, string),
-            Action<object, object>> SetterCache =
-            new ConcurrentDictionary<(RuntimeTypeHandle, string),
-                Action<object, object>>();
+            Action<object, object>> SetterCache = new();
 
     public static Func<object, object> GetGetter(PropertyInfo property)
     {

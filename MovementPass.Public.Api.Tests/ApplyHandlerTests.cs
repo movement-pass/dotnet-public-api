@@ -105,8 +105,7 @@ public class ApplyHandlerTests
             DriverLicenseNo = new string('x', 32)
         };
 
-        var res = await this._handler.Handle(input, CancellationToken.None)
-            .ConfigureAwait(false);
+        var res = await this._handler.Handle(input, CancellationToken.None);
 
         var put = req.TransactItems[0].Put;
 

@@ -54,7 +54,7 @@ public class IdentityControllerTests
                 MobilePhone = MobilePhone,
                 DateOfBirth = DateOfBirth.ToString("ddMMyyyy")
             }, CancellationToken.None)
-            .ConfigureAwait(false) as OkObjectResult;
+            as OkObjectResult;
 
         Assert.NotNull(result);
         Assert.IsType<JwtResult>(result.Value);
@@ -72,7 +72,7 @@ public class IdentityControllerTests
                 MobilePhone = MobilePhone,
                 DateOfBirth = "15121971"
             }, CancellationToken.None)
-            .ConfigureAwait(false) as BadRequestObjectResult;
+            as BadRequestObjectResult;
 
         Assert.NotNull(result);
     }
@@ -90,8 +90,7 @@ public class IdentityControllerTests
         
         var result = await this._controller.Register(
                 new RegisterRequest(),
-                CancellationToken.None)
-            .ConfigureAwait(false) as ObjectResult;
+                CancellationToken.None) as ObjectResult;
 
         Assert.NotNull(result);
         Assert.IsType<JwtResult>(result.Value);
@@ -119,8 +118,10 @@ public class IdentityControllerTests
             .Send(Arg.Any<PhotoUrlRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new PhotoUrlResult()));
         
-        var result = await this._controller.Photo(new PhotoUrlRequest(), CancellationToken.None)
-            .ConfigureAwait(false) as OkObjectResult;
+        var result = await this._controller.Photo(
+                new PhotoUrlRequest(),
+                CancellationToken.None)
+            as OkObjectResult;
 
         Assert.NotNull(result);
         Assert.IsType<PhotoUrlResult>(result.Value);

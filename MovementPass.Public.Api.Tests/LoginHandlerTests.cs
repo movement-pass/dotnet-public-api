@@ -110,8 +110,7 @@ public class LoginHandlerTests
             {
                 MobilePhone = MobilePhone,
                 DateOfBirth = DateOfBirth.ToString("ddMMyyyy")
-            }, CancellationToken.None)
-            .ConfigureAwait(false);
+            }, CancellationToken.None);
 
         Assert.NotNull(result);
     }
@@ -129,8 +128,7 @@ public class LoginHandlerTests
         var result= await this._handler.Handle(new LoginRequest
             {
                 MobilePhone = MobilePhone
-            }, CancellationToken.None)
-            .ConfigureAwait(false);
+            }, CancellationToken.None);
 
         Assert.Null(result);
     }
@@ -156,8 +154,7 @@ public class LoginHandlerTests
             {
                 MobilePhone = MobilePhone,
                 DateOfBirth = DateOfBirth.AddDays(1).ToString("ddMMyyyy")
-            }, CancellationToken.None)
-            .ConfigureAwait(false);
+            }, CancellationToken.None);
 
         Assert.Null(result);
     }

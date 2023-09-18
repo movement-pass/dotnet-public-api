@@ -40,13 +40,6 @@ public static class TypeExtensions
             throw new ArgumentNullException(nameof(instance));
         }
 
-        bool Matches(Type t)
-        {
-            var td = t.GetGenericTypeDefinition();
-
-            return td == other;
-        }
-
         if (instance.IsGenericType && Matches(instance))
         {
             return true;
@@ -56,5 +49,12 @@ public static class TypeExtensions
 
         return interfaces
             .Any(i => i.IsGenericType && Matches(i));
+
+        bool Matches(Type t)
+        {
+            var td = t.GetGenericTypeDefinition();
+
+            return td == other;
+        }
     }
 }

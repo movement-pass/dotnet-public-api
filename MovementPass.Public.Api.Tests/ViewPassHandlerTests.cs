@@ -56,6 +56,7 @@ public class ViewPassHandlerTests
                 this._mockedDynamoDB, 
                 null,
                 new OptionsWrapper<DynamoDBTablesOptions>(this._tablesOptions)));
+    
     [Fact]
     public void Constructor_throws_on_null_DynamoDBTablesOptions() =>
         Assert.Throws<ArgumentNullException>(() =>
@@ -63,6 +64,7 @@ public class ViewPassHandlerTests
                 this._mockedDynamoDB, 
                 this._mockedCurrentUserProvider,
                 null));
+    
     [Fact]
     public async Task Handle_returns_matching_pass()
     {
@@ -88,8 +90,9 @@ public class ViewPassHandlerTests
                 } 
             }));
         
-        var pass = await this._handler.Handle(new ViewPassRequest { Id = id }, CancellationToken.None)
-            .ConfigureAwait(false);
+        var pass = await this._handler.Handle(
+            new ViewPassRequest { Id = id },
+            CancellationToken.None);
 
         Assert.NotNull(pass);
         Assert.Equal(id, pass.Id);
@@ -109,8 +112,9 @@ public class ViewPassHandlerTests
             }));
         
         var res = await this._handler
-            .Handle(new ViewPassRequest { Id = IdGenerator.Generate() }, CancellationToken.None)
-            .ConfigureAwait(false);
+            .Handle(
+                new ViewPassRequest { Id = IdGenerator.Generate() },
+                CancellationToken.None);
 
         Assert.Null(res);
     }

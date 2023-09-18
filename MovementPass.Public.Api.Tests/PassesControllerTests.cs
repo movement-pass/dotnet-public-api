@@ -49,8 +49,10 @@ public class PassesControllerTests
                 Id = IdGenerator.Generate()
             }));
         
-        var result = await this._controller.Apply(new ApplyRequest(), CancellationToken.None)
-            .ConfigureAwait(false) as CreatedAtActionResult;
+        var result = await this._controller.Apply(
+                new ApplyRequest(),
+                CancellationToken.None)
+            as CreatedAtActionResult;
 
         Assert.NotNull(result);
         Assert.IsType<IdResult>(result.Value);
@@ -62,8 +64,10 @@ public class PassesControllerTests
         this._mockedMediator.Send(Arg.Any<ViewPassesRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new PassListResult()));
         
-        var result = await this._controller.List(new PassListKey(), CancellationToken.None)
-            .ConfigureAwait(false) as OkObjectResult;
+        var result = await this._controller.List(
+                new PassListKey(),
+                CancellationToken.None)
+            as OkObjectResult;
 
         Assert.NotNull(result);
         Assert.IsType<PassListResult>(result.Value);
@@ -75,8 +79,9 @@ public class PassesControllerTests
         this._mockedMediator.Send(Arg.Any<ViewPassRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new PassDetailItem()));
         
-        var result = await this._controller.Get(IdGenerator.Generate(), CancellationToken.None)
-            .ConfigureAwait(false) as OkObjectResult;
+        var result = await this._controller.Get(
+            IdGenerator.Generate(),
+            CancellationToken.None) as OkObjectResult;
 
         Assert.NotNull(result);
         Assert.IsType<PassDetailItem>(result.Value);
@@ -88,8 +93,9 @@ public class PassesControllerTests
         this._mockedMediator.Send(Arg.Any<ViewPassRequest>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<PassDetailItem>(null));
         
-        var result = await this._controller.Get(IdGenerator.Generate(), CancellationToken.None)
-            .ConfigureAwait(false) as NotFoundResult;
+        var result = await this._controller.Get(
+            IdGenerator.Generate(),
+            CancellationToken.None) as NotFoundResult;
 
         Assert.NotNull(result);
     }

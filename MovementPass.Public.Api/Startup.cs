@@ -25,8 +25,6 @@ using Amazon.S3;
 using Amazon.XRay.Recorder.Core;
 using Amazon.XRay.Recorder.Handlers.AwsSdk;
 
-using MediatR;
-
 using ExtensionMethods;
 using Infrastructure;
 
