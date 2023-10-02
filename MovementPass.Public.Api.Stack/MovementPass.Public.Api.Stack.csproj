@@ -11,8 +11,8 @@
     <ItemGroup>
         <PackageReference Include="Amazon.CDK.AWS.APIGatewayv2.Alpha" Version="2.51.1-alpha.0" />
         <PackageReference Include="Amazon.CDK.AWS.APIGatewayv2.Integrations.Alpha" Version="2.51.1-alpha.0" />
-        <PackageReference Include="Amazon.CDK.Lib" Version="2.96.1" />
-        <PackageReference Include="Amazon.Jsii.Analyzers" Version="1.88.0" PrivateAssets="all" />
+        <PackageReference Include="Amazon.CDK.Lib" Version="2.99.1" />
+        <PackageReference Include="Amazon.Jsii.Analyzers" Version="1.89.0" PrivateAssets="all" />
         <PackageReference Include="Constructs" Version="10.2.70" />
     </ItemGroup>
 </Project>
