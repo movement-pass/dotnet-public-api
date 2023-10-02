@@ -105,8 +105,7 @@ public class RegisterHandlerTests
             Photo = "https://photos.movement-pass.com/123456.jpg"
         };
 
-        var result = await this._handler.Handle(input, CancellationToken.None)
-            .ConfigureAwait(false);
+        var result = await this._handler.Handle(input, CancellationToken.None);
 
         Assert.Equal(input.MobilePhone, req.Item["id"].S);
         Assert.Equal(input.Name, req.Item["name"].S);
@@ -134,8 +133,7 @@ public class RegisterHandlerTests
                 Arg.Any<CancellationToken>())
             .ThrowsAsync(new ConditionalCheckFailedException("Failed"));
         
-        var applicant = await this._handler.Handle(new RegisterRequest(), CancellationToken.None)
-            .ConfigureAwait(false);
+        var applicant = await this._handler.Handle(new RegisterRequest(), CancellationToken.None);
 
         Assert.Null(applicant);
     }
