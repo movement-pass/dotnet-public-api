@@ -88,8 +88,7 @@ public class ViewPassHandlerTests
                 } 
             }));
         
-        var pass = await this._handler.Handle(new ViewPassRequest { Id = id }, CancellationToken.None)
-            .ConfigureAwait(false);
+        var pass = await this._handler.Handle(new ViewPassRequest { Id = id }, CancellationToken.None);
 
         Assert.NotNull(pass);
         Assert.Equal(id, pass.Id);
@@ -109,8 +108,7 @@ public class ViewPassHandlerTests
             }));
         
         var res = await this._handler
-            .Handle(new ViewPassRequest { Id = IdGenerator.Generate() }, CancellationToken.None)
-            .ConfigureAwait(false);
+            .Handle(new ViewPassRequest { Id = IdGenerator.Generate() }, CancellationToken.None);
 
         Assert.Null(res);
     }

@@ -113,8 +113,7 @@ public class ViewPassesHandlerTests
                     Id = IdGenerator.Generate(),
                     EndAt = Clock.Now().ToString(AWSSDKUtils.ISO8601DateFormat, CultureInfo.InvariantCulture)
                 }
-            }, CancellationToken.None)
-            .ConfigureAwait(false);
+            }, CancellationToken.None);
 
         Assert.Equal("applicantId", req.ExpressionAttributeNames["#aid"]);
         Assert.Equal(userId, req.ExpressionAttributeValues[":aid"].S);
